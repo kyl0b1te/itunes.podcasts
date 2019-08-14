@@ -47,13 +47,13 @@ func GetAllGenresRequestOptions() *AllGenresRequestOptions {
 
 	return &AllGenresRequestOptions{
 		LookupURL: "https://podcasts.apple.com/us/genre/podcasts/id26",
-		Pattern:   ".top-level-subgenres a[href]",
+		Pattern:   ".top-level-genre, .top-level-subgenres a[href]",
 	}
 }
 
 func GetAllGenresFromWeb(options *AllGenresRequestOptions) ([]*Genre, error) {
 
-	var genresError error
+	var err error
 	genres := []*Genre{}
 
 	collector := colly.NewCollector()
@@ -62,12 +62,12 @@ func GetAllGenresFromWeb(options *AllGenresRequestOptions) ([]*Genre, error) {
 		genres = append(genres, newGenreByURL(link))
 	})
 
-	collector.OnError(func(response *colly.Response, err error) {
-		genresError = err
+	collector.OnError(func(response *colly.Response, colErr error) {
+		err = colErr
 	})
 
 	collector.Visit(options.LookupURL)
 	collector.Wait()
 
-	return genres, genresError
+	return genres, err
 }
