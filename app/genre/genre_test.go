@@ -27,6 +27,12 @@ func newTestServer() *httptest.Server {
 		`))
 	})
 
+	mux.HandleFunc("/404", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(404)
+		w.Write([]byte("<p>error</p>"))
+	})
+
 	return httptest.NewServer(mux)
 }
 
@@ -52,13 +58,20 @@ func TestGetGenresFromWeb(t *testing.T) {
 	ts := newTestServer()
 	defer ts.Close()
 
-	actualGenres := GetAllGenresFromWeb(
-		&AllGenresRequestOptions{LookupURL: ts.URL, Pattern: ".target"},
-	)
-	expectedGenres := getMockedGenres()
+	genres, _ := GetAllGenresFromWeb(&AllGenresRequestOptions{
+		LookupURL: ts.URL,
+		Pattern: ".target",
+	})
+	mocked := getMockedGenres()
 
-	assert.Equal(t, 3, len(actualGenres))
-	for _, genre := range expectedGenres {
-		assert.Contains(t, actualGenres, genre)
+	assert.Equal(t, 3, len(genres))
+	for _, genre := range mocked {
+		assert.Contains(t, genres, genre)
 	}
+
+	_, err := GetAllGenresFromWeb(&AllGenresRequestOptions{
+		LookupURL: ts.URL + "/404",
+		Pattern:   ".target",
+	})
+	assert.Equal(t, "Not Found", err.Error())
 }
