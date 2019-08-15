@@ -60,7 +60,7 @@ func TestGetGenresFromWeb(t *testing.T) {
 
 	genres, _ := GetAllGenresFromWeb(&AllGenresRequestOptions{
 		LookupURL: ts.URL,
-		Pattern: ".target",
+		Pattern:   ".target",
 	})
 	mocked := getMockedGenres()
 

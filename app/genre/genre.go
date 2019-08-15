@@ -25,19 +25,6 @@ func NewGenre(id int, name string) *Genre {
 	return &Genre{id, name}
 }
 
-func newGenreByURL(url string) *Genre {
-
-	src := strings.Split(url, "/")
-	name := strings.TrimPrefix(src[len(src)-2], "podcasts-")
-
-	id, err := strconv.Atoi(strings.TrimPrefix(src[len(src)-1], "id"))
-	if err != nil {
-		panic(err)
-	}
-
-	return NewGenre(id, name)
-}
-
 func (g Genre) GetURL() string {
 
 	return fmt.Sprintf(genreURL, strings.ToLower(g.Name), g.ID)
@@ -70,4 +57,17 @@ func GetAllGenresFromWeb(options *AllGenresRequestOptions) ([]*Genre, error) {
 	collector.Wait()
 
 	return genres, err
+}
+
+func newGenreByURL(url string) (*Genre, error) {
+
+	src := strings.Split(url, "/")
+	name := strings.TrimPrefix(src[len(src)-2], "podcasts-")
+
+	id, err := strconv.Atoi(strings.TrimPrefix(src[len(src)-1], "id"))
+	if err != nil {
+		panic(err)
+	}
+
+	return NewGenre(id, name), nil
 }
