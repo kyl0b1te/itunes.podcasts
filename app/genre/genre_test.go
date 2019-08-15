@@ -1,6 +1,7 @@
 package genre
 
 import (
+	"os"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -66,4 +67,19 @@ func TestGetGenresFromWeb(t *testing.T) {
 		Pattern:   ".target",
 	})
 	assert.Equal(t, "Not Found", err.Error())
+}
+
+
+func TestSaveGenres(t *testing.T) {
+
+	genres := getMockedGenres()
+
+	err := SaveGenres("/tmp/inner/path/genres.json", genres)
+	assert.Equal(t, "open /tmp/inner/path/genres.json: no such file or directory", err.Error())
+
+	err = SaveGenres("/tmp/genres.json", genres)
+	assert.Nil(t, err)
+	assert.FileExists(t, "/tmp/genres.json")
+
+	os.Remove("/tmp/genres.json")
 }

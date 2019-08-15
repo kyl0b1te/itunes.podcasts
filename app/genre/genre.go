@@ -1,6 +1,8 @@
 package genre
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"strconv"
 	"strings"
 
@@ -31,6 +33,16 @@ func GetAllGenresRequestOptions() *AllGenresRequestOptions {
 		LookupURL: "https://podcasts.apple.com/us/genre/podcasts/id26",
 		Pattern:   ".top-level-genre, .top-level-subgenres a[href]",
 	}
+}
+
+func SaveGenres(file string, genres []*Genre) error {
+
+	json, err := json.Marshal(genres)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(file, json, 0644)
 }
 
 func GetAllGenresFromWeb(options *AllGenresRequestOptions) ([]*Genre, error) {
