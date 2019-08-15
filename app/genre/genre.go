@@ -1,7 +1,6 @@
 package genre
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -13,6 +12,7 @@ const genreURL = "https://podcasts.apple.com/us/genre/podcasts-%s/id%d"
 type Genre struct {
 	ID   int
 	Name string
+	URL string
 }
 
 type AllGenresRequestOptions struct {
@@ -20,14 +20,9 @@ type AllGenresRequestOptions struct {
 	Pattern   string
 }
 
-func NewGenre(id int, name string) *Genre {
+func NewGenre(id int, name, url string) *Genre {
 
-	return &Genre{id, name}
-}
-
-func (g Genre) GetURL() string {
-
-	return fmt.Sprintf(genreURL, strings.ToLower(g.Name), g.ID)
+	return &Genre{id, name, url}
 }
 
 func GetAllGenresRequestOptions() *AllGenresRequestOptions {
@@ -45,8 +40,10 @@ func GetAllGenresFromWeb(options *AllGenresRequestOptions) ([]*Genre, error) {
 
 	collector := colly.NewCollector()
 	collector.OnHTML(options.Pattern, func(element *colly.HTMLElement) {
-		link := element.Attr("href")
-		genres = append(genres, newGenreByURL(link))
+		url := element.Attr("href")
+		id := getGenreIDFromURL(url)
+
+		genres = append(genres, NewGenre(id, element.Text, url))
 	})
 
 	collector.OnError(func(response *colly.Response, colErr error) {
@@ -59,15 +56,13 @@ func GetAllGenresFromWeb(options *AllGenresRequestOptions) ([]*Genre, error) {
 	return genres, err
 }
 
-func newGenreByURL(url string) (*Genre, error) {
+func getGenreIDFromURL(url string) int {
 
 	src := strings.Split(url, "/")
-	name := strings.TrimPrefix(src[len(src)-2], "podcasts-")
-
 	id, err := strconv.Atoi(strings.TrimPrefix(src[len(src)-1], "id"))
 	if err != nil {
 		panic(err)
 	}
 
-	return NewGenre(id, name), nil
+	return id
 }
