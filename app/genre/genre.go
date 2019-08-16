@@ -3,33 +3,24 @@ package genre
 import (
 	"encoding/json"
 	"io/ioutil"
-	"strconv"
-	"strings"
 
-	"github.com/gocolly/colly"
+	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 )
 
-const genreURL = "https://podcasts.apple.com/us/genre/podcasts-%s/id%d"
-
 type Genre struct {
-	ID   int
+	ID int
 	Name string
 	URL string
 }
 
-type AllGenresRequestOptions struct {
-	LookupURL string
-	Pattern   string
-}
-
-func NewGenre(id int, name, url string) *Genre {
+func NewGenre(id int, name string, url string) *Genre {
 
 	return &Genre{id, name, url}
 }
 
-func GetAllGenresRequestOptions() *AllGenresRequestOptions {
+func GenresRequestOptions() *crawler.RequestOptions {
 
-	return &AllGenresRequestOptions{
+	return &crawler.RequestOptions {
 		LookupURL: "https://podcasts.apple.com/us/genre/podcasts/id26",
 		Pattern:   ".top-level-genre, .top-level-subgenres a[href]",
 	}
@@ -45,36 +36,23 @@ func SaveGenres(file string, genres []*Genre) error {
 	return ioutil.WriteFile(file, json, 0644)
 }
 
-func GetAllGenresFromWeb(options *AllGenresRequestOptions) ([]*Genre, error) {
+func GetGenres(options *crawler.RequestOptions) ([]*Genre, error) {
 
-	var err error
 	genres := []*Genre{}
 
-	collector := colly.NewCollector()
-	collector.OnHTML(options.Pattern, func(element *colly.HTMLElement) {
-		url := element.Attr("href")
-		id := getGenreIDFromURL(url)
-
-		genres = append(genres, NewGenre(id, element.Text, url))
-	})
-
-	collector.OnError(func(response *colly.Response, colErr error) {
-		err = colErr
-	})
-
-	collector.Visit(options.LookupURL)
-	collector.Wait()
-
-	return genres, err
-}
-
-func getGenreIDFromURL(url string) int {
-
-	src := strings.Split(url, "/")
-	id, err := strconv.Atoi(strings.TrimPrefix(src[len(src)-1], "id"))
+	entities, err := crawler.GetEntities(options)
 	if err != nil {
-		panic(err)
+		return genres, err
 	}
 
-	return id
+	for name, url := range entities {
+
+		id, err := crawler.GetEntityIDFromURL(url)
+		if err != nil {
+			return genres, err
+		}
+		genres = append(genres, NewGenre(id, name, url))
+	}
+
+	return genres, nil
 }

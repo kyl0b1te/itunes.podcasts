@@ -1,11 +1,12 @@
 package genre
 
 import (
-	"os"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
+	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,24 +52,23 @@ func TestGetGenresFromWeb(t *testing.T) {
 	ts := newTestServer()
 	defer ts.Close()
 
-	genres, _ := GetAllGenresFromWeb(&AllGenresRequestOptions{
+	genres, _ := GetGenres(&crawler.RequestOptions{
 		LookupURL: ts.URL,
 		Pattern:   ".target",
 	})
 	mocked := getMockedGenres()
 
-	assert.Equal(t, 3, len(genres))
+	assert.Equal(t, len(mocked), len(genres))
 	for _, genre := range mocked {
 		assert.Contains(t, genres, genre)
 	}
 
-	_, err := GetAllGenresFromWeb(&AllGenresRequestOptions{
+	_, err := GetGenres(&crawler.RequestOptions{
 		LookupURL: ts.URL + "/404",
 		Pattern:   ".target",
 	})
 	assert.Equal(t, "Not Found", err.Error())
 }
-
 
 func TestSaveGenres(t *testing.T) {
 
