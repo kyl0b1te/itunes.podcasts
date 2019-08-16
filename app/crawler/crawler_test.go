@@ -38,7 +38,7 @@ func newTestServer() *httptest.Server {
 
 func getMockedEntities() map[string]string {
 
-	return map[string]string {
+	return map[string]string{
 		"link #1": "http://x.com/podcasts-test1-first/id1",
 		"link #2": "http://x.com/podcasts-test1-second/id2",
 		"link #3": "http://x.com/podcasts-test2-first/id3",

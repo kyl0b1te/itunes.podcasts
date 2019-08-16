@@ -1,15 +1,15 @@
 package crawler
 
 import (
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/gocolly/colly"
 )
 
 type RequestOptions struct {
 	LookupURL string
-	Pattern string
+	Pattern   string
 }
 
 func GetEntities(options *RequestOptions) (map[string]string, error) {

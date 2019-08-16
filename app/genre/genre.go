@@ -8,9 +8,9 @@ import (
 )
 
 type Genre struct {
-	ID int
+	ID   int
 	Name string
-	URL string
+	URL  string
 }
 
 func NewGenre(id int, name string, url string) *Genre {
@@ -20,7 +20,7 @@ func NewGenre(id int, name string, url string) *Genre {
 
 func GenresRequestOptions() *crawler.RequestOptions {
 
-	return &crawler.RequestOptions {
+	return &crawler.RequestOptions{
 		LookupURL: "https://podcasts.apple.com/us/genre/podcasts/id26",
 		Pattern:   ".top-level-genre, .top-level-subgenres a[href]",
 	}
