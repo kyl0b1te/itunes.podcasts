@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 	"github.com/stretchr/testify/assert"
+	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 )
 
 func newTestServer() *httptest.Server {
@@ -71,7 +71,7 @@ func getMockedShowResponse(show *Show) []byte {
 
 func getMockedShows() []*Show {
 
-	return []*Show {
+	return []*Show{
 		NewShow(1, "Show #1", "Artist Show #1"),
 		NewShow(2, "Show #2", "Artist Show #2"),
 		NewShow(3, "Show #3", "Artist Show #3"),
