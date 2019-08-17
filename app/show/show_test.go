@@ -6,8 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
+	"github.com/zhikiri/uaitunes-podcasts/app/genre"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func newTestServer() *httptest.Server {
@@ -98,6 +100,16 @@ func getMockedShows() []*Show {
 		getNewShow(2, "Show #2", "Artist Show #2"),
 		getNewShow(3, "Show #3", "Artist Show #3"),
 	}
+}
+
+func TestShowRequestOptions(t *testing.T) {
+
+	url := "http://x.com"
+	opt := ShowsRequestOptions(genre.NewGenre(1, "test", url))
+
+	assert.Equal(t, url, opt.RequestOptions.LookupURL)
+	assert.NotEmpty(t, opt.RequestOptions.Pattern)
+	assert.NotEmpty(t, opt.ShowDetailsURL)
 }
 
 func TestGetShows(t *testing.T) {
