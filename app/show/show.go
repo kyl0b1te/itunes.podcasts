@@ -16,7 +16,7 @@ type Show struct {
 	Name   string
 	Artist string
 	RSS    string
-	Genres []int
+	Genres []string
 	Image  ShowImage
 }
 
@@ -37,7 +37,7 @@ type showDetailsResponse struct {
 		ArtistId       int    `json:"artistId"`
 		ArtistName     string `json:"artistName"`
 		CollectionName string `json:"collectionName"`
-		GenreIds       []int  `json:"genreIds"`
+		GenreIds       []string  `json:"genreIds"`
 		ArtworkURL30   string `json:"artworkURL30"`
 		ArtworkURL60   string `json:"artworkURL60"`
 		ArtworkURL100  string `json:"artworkURL100"`
@@ -76,6 +76,16 @@ func GetShows(options *ShowRequestOptions) ([]*Show, []error) {
 	}
 
 	return shows, errors
+}
+
+func SaveShows(file string, shows []*Show) error {
+
+	json, err := json.Marshal(shows)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(file, json, 0644)
 }
 
 func getShowsFromEntities(entities map[string]string, options *ShowRequestOptions) (chan *Show, chan error) {
