@@ -30,6 +30,21 @@ func newTestServer() *httptest.Server {
 		`))
 	})
 
+	mux.HandleFunc("/invalid", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(200)
+		w.Write([]byte(`<!DOCTYPE html>
+<html>
+<head>
+<title>Test Page</title>
+</head>
+<body>
+<a class="target" href="http://x.com/podcasts-test1-first/idd">invalid</a>
+</body>
+</html>
+		`))
+	})
+
 	mux.HandleFunc("/404", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(404)
@@ -46,6 +61,13 @@ func getMockedGenres() []*Genre {
 		NewGenre(2, "link #2", "http://x.com/podcasts-test1-second/id2"),
 		NewGenre(3, "link #3", "http://x.com/podcasts-test2-first/id3"),
 	}
+}
+
+func TestGenresRequestOptions(t *testing.T) {
+
+	options := GenresRequestOptions()
+	assert.NotEmpty(t, options.LookupURL)
+	assert.NotEmpty(t, options.Pattern)
 }
 
 func TestGetGenresFromWeb(t *testing.T) {
@@ -65,6 +87,12 @@ func TestGetGenresFromWeb(t *testing.T) {
 	}
 
 	_, err := GetGenres(&crawler.RequestOptions{
+		LookupURL: ts.URL + "/invalid",
+		Pattern:   ".target",
+	})
+	assert.Equal(t, "strconv.Atoi: parsing \"d\": invalid syntax", errors.Cause(err).Error())
+
+	_, err = GetGenres(&crawler.RequestOptions{
 		LookupURL: ts.URL + "/404",
 		Pattern:   ".target",
 	})
