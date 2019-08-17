@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/pkg/errors"
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 )
 
@@ -42,7 +43,7 @@ func GetGenres(options *crawler.RequestOptions) ([]*Genre, error) {
 
 	entities, err := crawler.GetEntities(options)
 	if err != nil {
-		return genres, err
+		return genres, errors.Wrapf(err, "genres cannot be loaded from URL: %s", options.LookupURL)
 	}
 
 	for name, url := range entities {

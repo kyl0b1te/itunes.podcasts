@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gocolly/colly"
+	"github.com/pkg/errors"
 )
 
 type RequestOptions struct {
@@ -35,5 +36,11 @@ func GetEntityIDFromURL(url string) (int, error) {
 	parts := strings.Split(url, "/")
 	last := parts[len(parts)-1]
 
-	return strconv.Atoi(strings.TrimPrefix(last, "id"))
+	id, err := strconv.Atoi(strings.TrimPrefix(last, "id"))
+	if err != nil {
+
+		return 0, errors.Wrapf(err, "ID cannot be parsed from URL: %s", url)
+	}
+
+	return id, nil
 }

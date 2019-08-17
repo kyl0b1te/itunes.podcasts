@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 )
@@ -67,7 +68,7 @@ func TestGetGenresFromWeb(t *testing.T) {
 		LookupURL: ts.URL + "/404",
 		Pattern:   ".target",
 	})
-	assert.Equal(t, "Not Found", err.Error())
+	assert.Equal(t, "Not Found", errors.Cause(err).Error())
 }
 
 func TestSaveGenres(t *testing.T) {

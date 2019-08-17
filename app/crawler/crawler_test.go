@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -80,5 +81,5 @@ func TestGetEntityIDFromURL(t *testing.T) {
 	assert.Nil(t, err)
 
 	_, err = GetEntityIDFromURL("http://x.x/a/idd")
-	assert.Equal(t, "strconv.Atoi: parsing \"d\": invalid syntax", err.Error())
+	assert.Equal(t, "strconv.Atoi: parsing \"d\": invalid syntax", errors.Cause(err).Error())
 }
