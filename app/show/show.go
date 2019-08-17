@@ -33,15 +33,15 @@ type ShowRequestOptions struct {
 
 type showDetailsResponse struct {
 	Results []struct {
-		CollectionId   int    `json:"collectionId"`
-		ArtistId       int    `json:"artistId"`
-		ArtistName     string `json:"artistName"`
-		CollectionName string `json:"collectionName"`
-		GenreIds       []string  `json:"genreIds"`
-		ArtworkURL30   string `json:"artworkURL30"`
-		ArtworkURL60   string `json:"artworkURL60"`
-		ArtworkURL100  string `json:"artworkURL100"`
-		FeedURL        string `json:"feedUrl"`
+		CollectionId   int      `json:"collectionId"`
+		ArtistId       int      `json:"artistId"`
+		ArtistName     string   `json:"artistName"`
+		CollectionName string   `json:"collectionName"`
+		GenreIds       []string `json:"genreIds"`
+		ArtworkURL30   string   `json:"artworkURL30"`
+		ArtworkURL60   string   `json:"artworkURL60"`
+		ArtworkURL100  string   `json:"artworkURL100"`
+		FeedURL        string   `json:"feedUrl"`
 	} `json:"results"`
 }
 
