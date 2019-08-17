@@ -56,44 +56,51 @@ func ShowsRequestOptions(genre *genre.Genre) *ShowRequestOptions {
 	}
 }
 
-func GetShows(options *ShowRequestOptions) ([]*Show, error) {
+func GetShows(options *ShowRequestOptions) ([]*Show, []error) {
 
 	shows := []*Show{}
 
 	entities, err := crawler.GetEntities(&options.RequestOptions)
 	if err != nil {
-		return shows, err
+		return shows, []error{err}
 	}
 
-	ch := make(chan *Show, len(entities))
+	errorsCh := make(chan error, len(entities))
+	showsCh := make(chan *Show, len(entities))
 	var wg sync.WaitGroup
 
 	for _, url := range entities {
 
 		id, err := crawler.GetEntityIDFromURL(url)
 		if err != nil {
-			return shows, err
+			return shows, []error{err}
 		}
 
 		wg.Add(1)
 		go func() {
 			show, err := getShowDetails(id, options)
 			if err != nil {
-				// todo : store errors in a channel
-				fmt.Println(err)
+				errorsCh <- err
+			} else {
+				showsCh <- show
 			}
-			ch <- show
 			wg.Done()
 		}()
 	}
 	wg.Wait()
-	close(ch)
+	close(showsCh)
+	close(errorsCh)
 
-	for show := range ch {
+	for show := range showsCh {
 		shows = append(shows, show)
 	}
 
-	return shows, nil
+	errors := []error{}
+	for err := range errorsCh {
+		errors = append(errors, err)
+	}
+
+	return shows, errors
 }
 
 func getShowDetails(id int, options *ShowRequestOptions) (*Show, error) {

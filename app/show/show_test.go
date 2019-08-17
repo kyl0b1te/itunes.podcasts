@@ -121,6 +121,6 @@ func TestGetShows(t *testing.T) {
 	}
 
 	options.RequestOptions.LookupURL = ts.URL + "/404"
-	_, err := GetShows(options)
-	assert.Equal(t, "Not Found", err.Error())
+	_, errors := GetShows(options)
+	assert.Equal(t, "Not Found", errors[0].Error())
 }
