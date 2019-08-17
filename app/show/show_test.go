@@ -59,7 +59,12 @@ func getMockedShowResponse(show *Show) []byte {
         {
             "collectionId": %d,
             "artistName": "%s",
-            "collectionName": "%s"
+						"collectionName": "%s",
+						"genreIds": [],
+						"artworkURL30": "",
+						"artworkURL60": "",
+						"artworkURL100": "",
+						"feedUrl": ""
         }
 		]}`,
 		show.ID,
@@ -69,12 +74,28 @@ func getMockedShowResponse(show *Show) []byte {
 	return []byte(msg)
 }
 
+func getNewShow(id int, name string, artist string) *Show {
+
+	return &Show{
+		ID:     id,
+		Name:   name,
+		Artist: artist,
+		RSS:    "",
+		Genres: []int{},
+		Image: ShowImage{
+			Small:  "",
+			Medium: "",
+			Big:    "",
+		},
+	}
+}
+
 func getMockedShows() []*Show {
 
 	return []*Show{
-		NewShow(1, "Show #1", "Artist Show #1"),
-		NewShow(2, "Show #2", "Artist Show #2"),
-		NewShow(3, "Show #3", "Artist Show #3"),
+		getNewShow(1, "Show #1", "Artist Show #1"),
+		getNewShow(2, "Show #2", "Artist Show #2"),
+		getNewShow(3, "Show #3", "Artist Show #3"),
 	}
 }
 
@@ -95,8 +116,8 @@ func TestGetShows(t *testing.T) {
 	mocked := getMockedShows()
 
 	assert.Equal(t, len(mocked), len(shows))
-	for _, show := range mocked {
-		assert.Contains(t, shows, show)
+	for _, mockedShow := range mocked {
+		assert.Contains(t, shows, mockedShow)
 	}
 
 	options.RequestOptions.LookupURL = ts.URL + "/404"

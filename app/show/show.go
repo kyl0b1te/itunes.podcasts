@@ -15,6 +15,15 @@ type Show struct {
 	ID     int
 	Name   string
 	Artist string
+	RSS    string
+	Genres []int
+	Image  ShowImage
+}
+
+type ShowImage struct {
+	Small  string
+	Medium string
+	Big    string
 }
 
 type ShowRequestOptions struct {
@@ -32,12 +41,8 @@ type showDetailsResponse struct {
 		ArtworkURL30   string `json:"artworkURL30"`
 		ArtworkURL60   string `json:"artworkURL60"`
 		ArtworkURL100  string `json:"artworkURL100"`
+		FeedURL        string `json:"feedUrl"`
 	} `json:"results"`
-}
-
-func NewShow(id int, name string, artist string) *Show {
-
-	return &Show{id, name, artist}
 }
 
 func ShowsRequestOptions(genre *genre.Genre) *ShowRequestOptions {
@@ -110,10 +115,18 @@ func getShowDetails(id int, options *ShowRequestOptions) (*Show, error) {
 	if err != nil {
 		return &Show{}, err
 	}
+	res := details.Results[0]
 
 	return &Show{
-		ID:     details.Results[0].CollectionId,
-		Name:   details.Results[0].CollectionName,
-		Artist: details.Results[0].ArtistName,
+		ID:     res.CollectionId,
+		Name:   res.CollectionName,
+		Artist: res.ArtistName,
+		RSS:    res.FeedURL,
+		Genres: res.GenreIds,
+		Image: ShowImage{
+			Small:  res.ArtworkURL30,
+			Medium: res.ArtworkURL60,
+			Big:    res.ArtworkURL100,
+		},
 	}, nil
 }
