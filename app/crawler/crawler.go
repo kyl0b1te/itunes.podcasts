@@ -38,7 +38,6 @@ func GetEntityIDFromURL(url string) (int, error) {
 
 	id, err := strconv.Atoi(strings.TrimPrefix(last, "id"))
 	if err != nil {
-
 		return 0, errors.Wrapf(err, "ID cannot be parsed from URL: %s", url)
 	}
 

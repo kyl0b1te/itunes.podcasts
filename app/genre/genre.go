@@ -22,7 +22,8 @@ func NewGenre(id int, name string, url string) *Genre {
 func GenresRequestOptions() *crawler.RequestOptions {
 
 	return &crawler.RequestOptions{
-		LookupURL: "https://podcasts.apple.com/us/genre/podcasts/id26",
+		// change the country in the request to parse country specific top
+		LookupURL: "https://podcasts.apple.com/ua/genre/podcasts/id26",
 		Pattern:   ".top-level-genre, .top-level-subgenres a[href]",
 	}
 }
