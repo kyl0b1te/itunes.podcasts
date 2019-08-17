@@ -58,52 +58,59 @@ func ShowsRequestOptions(genre *genre.Genre) *ShowRequestOptions {
 
 func GetShows(options *ShowRequestOptions) ([]*Show, []error) {
 
-	shows := []*Show{}
-
 	entities, err := crawler.GetEntities(&options.RequestOptions)
 	if err != nil {
-		return shows, []error{err}
+		return []*Show{}, []error{err}
 	}
 
-	errorsCh := make(chan error, len(entities))
-	showsCh := make(chan *Show, len(entities))
-	var wg sync.WaitGroup
+	resCh, errCh := getShowsFromEntities(entities, options)
 
-	for _, url := range entities {
-
-		id, err := crawler.GetEntityIDFromURL(url)
-		if err != nil {
-			return shows, []error{err}
-		}
-
-		wg.Add(1)
-		go func() {
-			show, err := getShowDetails(id, options)
-			if err != nil {
-				errorsCh <- err
-			} else {
-				showsCh <- show
-			}
-			wg.Done()
-		}()
-	}
-	wg.Wait()
-	close(showsCh)
-	close(errorsCh)
-
-	for show := range showsCh {
+	shows := []*Show{}
+	for show := range resCh {
 		shows = append(shows, show)
 	}
 
 	errors := []error{}
-	for err := range errorsCh {
+	for err := range errCh {
 		errors = append(errors, err)
 	}
 
 	return shows, errors
 }
 
-func getShowDetails(id int, options *ShowRequestOptions) (*Show, error) {
+func getShowsFromEntities(entities map[string]string, options *ShowRequestOptions) (chan *Show, chan error) {
+
+	entLen := len(entities)
+	errCh := make(chan error, entLen)
+	resCh := make(chan *Show, entLen)
+
+	var wg sync.WaitGroup
+	wg.Add(entLen)
+	for _, url := range entities {
+
+		go func(url string) {
+
+			if show, err := getShowDetails(url, options); err != nil {
+				errCh <- err
+			} else {
+				resCh <- show
+			}
+			wg.Done()
+		}(url)
+	}
+	wg.Wait()
+	close(errCh)
+	close(resCh)
+
+	return resCh, errCh
+}
+
+func getShowDetails(showURL string, options *ShowRequestOptions) (*Show, error) {
+
+	id, err := crawler.GetEntityIDFromURL(showURL)
+	if err != nil {
+		return &Show{}, err
+	}
 
 	url := fmt.Sprintf("%s%d", options.ShowDetailsURL, id)
 	resp, err := http.Get(url)
@@ -122,8 +129,13 @@ func getShowDetails(id int, options *ShowRequestOptions) (*Show, error) {
 	if err != nil {
 		return &Show{}, err
 	}
-	res := details.Results[0]
 
+	return getShowFromResponse(details), nil
+}
+
+func getShowFromResponse(details showDetailsResponse) *Show {
+
+	res := details.Results[0]
 	return &Show{
 		ID:     res.CollectionId,
 		Name:   res.CollectionName,
@@ -135,5 +147,5 @@ func getShowDetails(id int, options *ShowRequestOptions) (*Show, error) {
 			Medium: res.ArtworkURL60,
 			Big:    res.ArtworkURL100,
 		},
-	}, nil
+	}
 }
