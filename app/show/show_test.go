@@ -81,12 +81,13 @@ func getNewShow(id int, name string, artist string) *Show {
 		Name:   name,
 		Artist: artist,
 		RSS:    "",
-		Genres: []int{},
+		Genres: []string{},
 		Image: ShowImage{
 			Small:  "",
 			Medium: "",
 			Big:    "",
 		},
+		Description: "",
 	}
 }
 

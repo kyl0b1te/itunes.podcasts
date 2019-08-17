@@ -2,6 +2,7 @@ package show
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,12 +13,14 @@ import (
 )
 
 type Show struct {
-	ID     int
-	Name   string
-	Artist string
-	RSS    string
-	Genres []string
-	Image  ShowImage
+	ID          int
+	Name        string
+	Artist      string
+	RSS         string
+	Genres      []string
+	Description string
+	Image       ShowImage
+	Summary     string
 }
 
 type ShowImage struct {
@@ -31,7 +34,7 @@ type ShowRequestOptions struct {
 	ShowDetailsURL string
 }
 
-type showDetailsResponse struct {
+type apiResponse struct {
 	Results []struct {
 		CollectionId   int      `json:"collectionId"`
 		ArtistId       int      `json:"artistId"`
@@ -43,6 +46,14 @@ type showDetailsResponse struct {
 		ArtworkURL100  string   `json:"artworkURL100"`
 		FeedURL        string   `json:"feedUrl"`
 	} `json:"results"`
+}
+
+type RSS struct {
+	XMLName xml.Name `xml:"rss"`
+	Channel struct {
+		XMLName     xml.Name `xml:"channel"`
+		Description string   `xml:"description"`
+	} `xml:"channel"`
 }
 
 func ShowsRequestOptions(genre *genre.Genre) *ShowRequestOptions {
@@ -80,7 +91,7 @@ func GetShows(options *ShowRequestOptions) ([]*Show, []error) {
 
 func SaveShows(file string, shows []*Show) error {
 
-	json, err := json.Marshal(shows)
+	json, err := json.MarshalIndent(shows, "", "")
 	if err != nil {
 		return err
 	}
@@ -122,40 +133,75 @@ func getShowDetails(showURL string, options *ShowRequestOptions) (*Show, error) 
 		return &Show{}, err
 	}
 
+	details, err := getShowFromAPI(id, options)
+	if err != nil {
+		return &Show{}, err
+	}
+	description, _ := getDescriptionFromRSS(details.Results[0].FeedURL)
+
+	return newShow(details, description), nil
+}
+
+func getShowFromAPI(id int, options *ShowRequestOptions) (*apiResponse, error) {
+
 	url := fmt.Sprintf("%s%d", options.ShowDetailsURL, id)
 	resp, err := http.Get(url)
 	if err != nil {
-		return &Show{}, err
+		return &apiResponse{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return &Show{}, err
+		return &apiResponse{}, err
 	}
 
-	var details showDetailsResponse
+	var details apiResponse
 	err = json.Unmarshal(body, &details)
 	if err != nil {
-		return &Show{}, err
+		return &apiResponse{}, err
 	}
 
-	return getShowFromResponse(details), nil
+	return &details, nil
 }
 
-func getShowFromResponse(details showDetailsResponse) *Show {
+func getDescriptionFromRSS(url string) (string, error) {
 
-	res := details.Results[0]
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var rss RSS
+	err = xml.Unmarshal(body, &rss)
+	if err != nil {
+		return "", err
+	}
+
+	return rss.Channel.Description, nil
+}
+
+func newShow(api *apiResponse, description string) *Show {
+
+	apiRes := api.Results[0]
+
 	return &Show{
-		ID:     res.CollectionId,
-		Name:   res.CollectionName,
-		Artist: res.ArtistName,
-		RSS:    res.FeedURL,
-		Genres: res.GenreIds,
+		ID:     apiRes.CollectionId,
+		Name:   apiRes.CollectionName,
+		Artist: apiRes.ArtistName,
+		RSS:    apiRes.FeedURL,
+		Genres: apiRes.GenreIds,
 		Image: ShowImage{
-			Small:  res.ArtworkURL30,
-			Medium: res.ArtworkURL60,
-			Big:    res.ArtworkURL100,
+			Small:  apiRes.ArtworkURL30,
+			Medium: apiRes.ArtworkURL60,
+			Big:    apiRes.ArtworkURL100,
 		},
+		Description: description,
 	}
 }
