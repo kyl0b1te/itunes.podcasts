@@ -18,15 +18,21 @@ type Show struct {
 	Artist      string
 	RSS         string
 	Genres      []string
-	Description string
 	Image       ShowImage
-	Summary     string
+	Description string
+	LastPodcast Podcast
+	Language	  string
 }
 
 type ShowImage struct {
 	Small  string
 	Medium string
 	Big    string
+}
+
+type Podcast struct {
+	Title       string
+	Description string
 }
 
 type ShowRequestOptions struct {
@@ -53,6 +59,10 @@ type RSS struct {
 	Channel struct {
 		XMLName     xml.Name `xml:"channel"`
 		Description string   `xml:"description"`
+		Item        struct {
+			Title       string   `xml:"title"`
+			Description string   `xml:"description"`
+		} `xml:"item"`
 	} `xml:"channel"`
 }
 
@@ -91,7 +101,7 @@ func GetShows(options *ShowRequestOptions) ([]*Show, []error) {
 
 func SaveShows(file string, shows []*Show) error {
 
-	json, err := json.MarshalIndent(shows, "", "")
+	json, err := json.MarshalIndent(shows, "", "\t")
 	if err != nil {
 		return err
 	}
@@ -137,9 +147,13 @@ func getShowDetails(showURL string, options *ShowRequestOptions) (*Show, error) 
 	if err != nil {
 		return &Show{}, err
 	}
-	description, _ := getDescriptionFromRSS(details.Results[0].FeedURL)
 
-	return newShow(details, description), nil
+	rss := &RSS{}
+	if details.Results[0].FeedURL != "" {
+		rss, _ = getShowFromRSS(details.Results[0].FeedURL)
+	}
+
+	return newShow(details, rss), nil
 }
 
 func getShowFromAPI(id int, options *ShowRequestOptions) (*apiResponse, error) {
@@ -165,29 +179,29 @@ func getShowFromAPI(id int, options *ShowRequestOptions) (*apiResponse, error) {
 	return &details, nil
 }
 
-func getDescriptionFromRSS(url string) (string, error) {
+func getShowFromRSS(url string) (*RSS, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return &RSS{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return &RSS{}, err
 	}
 
 	var rss RSS
 	err = xml.Unmarshal(body, &rss)
 	if err != nil {
-		return "", err
+		return &RSS{}, err
 	}
 
-	return rss.Channel.Description, nil
+	return &rss, nil
 }
 
-func newShow(api *apiResponse, description string) *Show {
+func newShow(api *apiResponse, rss *RSS) *Show {
 
 	apiRes := api.Results[0]
 
@@ -202,6 +216,11 @@ func newShow(api *apiResponse, description string) *Show {
 			Medium: apiRes.ArtworkURL60,
 			Big:    apiRes.ArtworkURL100,
 		},
-		Description: description,
+		Description: rss.Channel.Description,
+		LastPodcast: Podcast{
+			Title:       rss.Channel.Item.Title,
+			Description: rss.Channel.Item.Description,
+		},
+		Language: "",
 	}
 }
