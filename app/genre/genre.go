@@ -4,28 +4,27 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/pkg/errors"
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 )
 
 type Genre struct {
 	ID   int
-	Name string
 	URL  string
+	Name string
 }
 
-func NewGenre(id int, name string, url string) *Genre {
+func NewGenre(id int, url string, name string) *Genre {
 
-	return &Genre{id, name, url}
+	return &Genre{id, url, name}
 }
 
-func GenresRequestOptions() *crawler.RequestOptions {
+func GetRequestOptions() *crawler.ScraperOptions {
 
-	return &crawler.RequestOptions{
-		// change the country in the request to parse country specific top
-		LookupURL: "https://podcasts.apple.com/ua/genre/podcasts/id26",
-		Pattern:   ".top-level-genre, .top-level-subgenres a[href]",
-	}
+	// change the country in the request to parse country specific top
+	return crawler.GetScraperOptions(
+		[]string{"https://podcasts.apple.com/ua/genre/podcasts/id26"},
+		".top-level-genre, .top-level-subgenres a[href]",
+	)
 }
 
 func SaveGenres(file string, genres []*Genre) error {
@@ -38,23 +37,22 @@ func SaveGenres(file string, genres []*Genre) error {
 	return ioutil.WriteFile(file, json, 0644)
 }
 
-func GetGenres(options *crawler.RequestOptions) ([]*Genre, error) {
+func GetGenres(opt *crawler.ScraperOptions) ([]*Genre, []error) {
 
-	genres := []*Genre{}
-
-	entities, err := crawler.GetEntities(options)
-	if err != nil {
-		return genres, errors.Wrapf(err, "genres cannot be loaded from URL: %s", options.LookupURL)
+	res, err := crawler.ScrapeEntities(opt)
+	if len(err) > 0 {
+		return []*Genre{}, err
 	}
 
-	for name, url := range entities {
+	genres := []*Genre{}
+	for name, url := range res {
 
 		id, err := crawler.GetEntityIDFromURL(url)
 		if err != nil {
-			return genres, err
+			return genres, []error{err}
 		}
-		genres = append(genres, NewGenre(id, name, url))
+		genres = append(genres, NewGenre(id, url, name))
 	}
 
-	return genres, nil
+	return genres, []error{}
 }
