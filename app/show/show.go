@@ -6,66 +6,50 @@ import (
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 	"github.com/zhikiri/uaitunes-podcasts/app/genre"
-
-	"github.com/pkg/errors"
 )
 
 type Show struct {
-	ID     int
-	Name   string
-	URL    string
-	Genres []int
+	ID   int
+	Name string
+	URL  string
 }
 
-func NewShow(id int, name string, url string, genres []int) *Show {
+func NewShow(id int, name string, url string) *Show {
 
-	return &Show{id, name, url, genres}
+	return &Show{id, name, url}
 }
 
-func GetRequestOptions(genre *genre.Genre) *crawler.RequestOptions {
+func GetRequestOptions(genres []*genre.Genre) *crawler.ScraperOptions {
 
-	return crawler.GetRequestOptions(genre.URL, "div[id=selectedcontent] .column a[href]")
-}
-
-func GetShows(genres []*genre.Genre) ([]*Show, error) {
-
-	res := map[int]*Show{}
+	urls := []string{}
 	for _, genre := range genres {
-
-		opt := GetRequestOptions(genre)
-		if err := loadShows(opt, res); err != nil {
-			return []*Show{}, err
-		}
+		urls = append(urls, genre.URL)
 	}
 
-	shows := make([]*Show, 0, len(res))
-	for _, show := range res {
-		shows = append(shows, show)
-	}
-
-	return shows, nil
+	return crawler.GetScraperOptions(
+		urls,
+		"div[id=selectedcontent] .column a[href]",
+	)
 }
 
-func loadShows(opt *crawler.RequestOptions, shows map[int]*Show) error {
+func GetShows(opt *crawler.ScraperOptions) ([]*Show, []error) {
 
-	entities, err := crawler.GetEntities(opt)
-	if err != nil {
-		return errors.Wrapf(err, "shows cannot be loaded from URL: %s", opt.LookupURL)
+	res, err := crawler.ScrapeEntities(opt)
+	if len(err) > 0 {
+		return []*Show{}, err
 	}
 
-	for name, url := range entities {
+	shows := []*Show{}
+	for name, url := range res {
 
 		id, err := crawler.GetEntityIDFromURL(url)
 		if err != nil {
-			return err
+			return shows, []error{err}
 		}
-
-		if _, ok := shows[id]; !ok {
-			shows[id] = NewShow(id, name, url, []int{})
-		}
+		shows = append(shows, NewShow(id, name, url))
 	}
 
-	return nil
+	return shows, []error{}
 }
 
 func SaveShows(file string, shows []*Show) error {
