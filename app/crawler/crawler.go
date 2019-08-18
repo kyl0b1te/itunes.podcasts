@@ -3,37 +3,82 @@ package crawler
 import (
 	"strconv"
 	"strings"
+	"sync"
+	// "fmt"
 
 	"github.com/gocolly/colly"
 	"github.com/pkg/errors"
 )
 
-type RequestOptions struct {
-	LookupURL string
+type ScraperOptions struct {
+	LookupURL []string
 	Pattern   string
 }
 
-func GetRequestOptions(url string, pattern string) *RequestOptions {
-
-	return &RequestOptions{url, pattern}
+type ScrapeResult struct {
+	Entities map[string]string
+	Errors   []error
 }
 
-func GetEntities(options *RequestOptions) (map[string]string, error) {
+func GetScraperOptions(url []string, pattern string) *ScraperOptions {
 
-	var err error
-	entities := map[string]string{}
+	return &ScraperOptions{url, pattern}
+}
+
+func ScrapeEntities(opt *ScraperOptions) (map[string]string, []error) {
+
+	var wg sync.WaitGroup
+	resCh := make(chan *ScrapeResult, len(opt.LookupURL))
+
+	wg.Add(len(opt.LookupURL))
+	for _, url := range opt.LookupURL {
+
+		go func(url string) {
+
+			resCh <- getEntitiesFromHTML(url, opt.Pattern)
+			wg.Done()
+		}(url)
+	}
+	wg.Wait()
+
+	close(resCh)
+
+	res := map[string]string{}
+	err := []error{}
+
+	for scrape := range resCh {
+
+		if len(scrape.Errors) > 0 {
+			err = append(err, scrape.Errors...)
+		}
+
+		for name, url := range scrape.Entities {
+			if _, ok := res[name]; !ok {
+				res[name] = url
+			}
+		}
+	}
+
+	return res, err
+}
+
+func getEntitiesFromHTML(url string, pattern string) *ScrapeResult {
+
+	errs := []error{}
+	res := map[string]string{}
 
 	col := colly.NewCollector()
-	col.OnHTML(options.Pattern, func(el *colly.HTMLElement) {
-		entities[el.Text] = el.Attr("href")
+	col.OnHTML(pattern, func(el *colly.HTMLElement) {
+		res[el.Text] = el.Attr("href")
 	})
 
-	col.OnError(func(res *colly.Response, colErr error) {
-		err = colErr
+	col.OnError(func(resp *colly.Response, err error) {
+		// todo : wrap error
+		errs = append(errs, err)
 	})
-	col.Visit(options.LookupURL)
+	col.Visit(url)
 
-	return entities, err
+	return &ScrapeResult{res, errs}
 }
 
 func GetEntityIDFromURL(url string) (int, error) {
