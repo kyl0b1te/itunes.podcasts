@@ -10,13 +10,13 @@ import (
 
 type Show struct {
 	ID   int
-	Name string
 	URL  string
+	Name string
 }
 
-func NewShow(id int, name string, url string) *Show {
+func NewShow(id int, url string, name string) *Show {
 
-	return &Show{id, name, url}
+	return &Show{id, url, name}
 }
 
 func GetRequestOptions(genres []*genre.Genre) *crawler.ScraperOptions {
@@ -46,7 +46,7 @@ func GetShows(opt *crawler.ScraperOptions) ([]*Show, []error) {
 		if err != nil {
 			return shows, []error{err}
 		}
-		shows = append(shows, NewShow(id, name, url))
+		shows = append(shows, NewShow(id, url, name))
 	}
 
 	return shows, []error{}

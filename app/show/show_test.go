@@ -86,7 +86,7 @@ func TestGetShows(t *testing.T) {
 
 	shows, _ := GetShows(&crawler.ScraperOptions{
 		LookupURL: []string{ts.URL},
-		Pattern: ".target",
+		Pattern:   ".target",
 	})
 	mocked := getMockedShows()
 
