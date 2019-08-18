@@ -13,6 +13,11 @@ type RequestOptions struct {
 	Pattern   string
 }
 
+func GetRequestOptions(url string, pattern string) *RequestOptions {
+
+	return &RequestOptions{url, pattern}
+}
+
 func GetEntities(options *RequestOptions) (map[string]string, error) {
 
 	var err error
