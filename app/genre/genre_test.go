@@ -6,9 +6,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 )
 
 func newTestServer() *httptest.Server {
