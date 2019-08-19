@@ -64,14 +64,14 @@ func getMockedShows() []*Show {
 	}
 }
 
-func TestGetRequestOptions(t *testing.T) {
+func TestGetShowsRequestOptions(t *testing.T) {
 
 	genres := []*genre.Genre{
 		genre.NewGenre(1, "http://x.com./gr/1", "Gr1"),
 		genre.NewGenre(2, "http://x.com./gr/2", "Gr2"),
 		genre.NewGenre(3, "http://x.com./gr/3", "Gr3"),
 	}
-	opt := GetRequestOptions(genres)
+	opt := GetShowsRequestOptions(genres)
 
 	for _, gr := range genres {
 		assert.Contains(t, opt.LookupURL, gr.URL)

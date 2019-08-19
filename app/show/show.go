@@ -19,7 +19,7 @@ func NewShow(id int, url string, name string) *Show {
 	return &Show{id, url, name}
 }
 
-func GetRequestOptions(genres []*genre.Genre) *crawler.ScraperOptions {
+func GetShowsRequestOptions(genres []*genre.Genre) *crawler.ScraperOptions {
 
 	urls := []string{}
 	for _, genre := range genres {
