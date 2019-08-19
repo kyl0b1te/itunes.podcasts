@@ -51,8 +51,8 @@ func TestGetEntityURLs(t *testing.T) {
 	ts := newTestServer()
 	defer ts.Close()
 
-	entities, _ := GetEntities(&RequestOptions{
-		LookupURL: ts.URL,
+	entities, _ := ScrapeEntities(&ScraperOptions{
+		LookupURL: []string{ts.URL},
 		Pattern:   ".target",
 	})
 	mocked := getMockedEntities()
@@ -63,11 +63,12 @@ func TestGetEntityURLs(t *testing.T) {
 		assert.Equal(t, url, entities[name])
 	}
 
-	_, err := GetEntities(&RequestOptions{
-		LookupURL: ts.URL + "/404",
+	_, err := ScrapeEntities(&ScraperOptions{
+		LookupURL: []string{ts.URL + "/404"},
 		Pattern:   ".target",
 	})
-	assert.Equal(t, "Not Found", err.Error())
+	assert.NotEmpty(t, err)
+	assert.Equal(t, "Not Found", err[0].Error())
 }
 
 func TestGetEntityIDFromURL(t *testing.T) {

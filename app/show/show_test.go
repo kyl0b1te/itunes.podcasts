@@ -1,7 +1,6 @@
 package show
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +8,7 @@ import (
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 	"github.com/zhikiri/uaitunes-podcasts/app/genre"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,27 +23,28 @@ func newTestServer() *httptest.Server {
 <title>Test Page</title>
 </head>
 <body>
-<a class="target" href="http://x.com/podcasts-test1-first/id1">link #1</a>
-<a class="target" href="http://x.com/podcasts-test1-second/id2">link #2</a>
-<a class="target" href="http://x.com/podcasts-test2-first/id3">link #3</a>
+<a class="target" href="http://x.com/sh/1">Sh1</a>
+<a class="target" href="http://x.com/sh/2">Sh2</a>
+<a class="target" href="http://x.com/sh/3">Sh3</a>
 </body>
 </html>
 		`))
 	})
 
-	for _, show := range getMockedShows() {
-
-		resp := getMockedShowResponse(show)
-
-		mux.HandleFunc(
-			fmt.Sprintf("/show/%d", show.ID),
-			func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(200)
-				w.Write(resp)
-			},
-		)
-	}
+	mux.HandleFunc("/invalid", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(200)
+		w.Write([]byte(`<!DOCTYPE html>
+<html>
+<head>
+<title>Test Page</title>
+</head>
+<body>
+<a class="target" href="http://x.com/podcasts-test1-first/idd">invalid</a>
+</body>
+</html>
+		`))
+	})
 
 	mux.HandleFunc("/404", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
@@ -54,62 +55,28 @@ func newTestServer() *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func getMockedShowResponse(show *Show) []byte {
-
-	msg := fmt.Sprintf(
-		`{"results": [
-        {
-            "collectionId": %d,
-            "artistName": "%s",
-						"collectionName": "%s",
-						"genreIds": [],
-						"artworkURL30": "",
-						"artworkURL60": "",
-						"artworkURL100": "",
-						"feedUrl": ""
-        }
-		]}`,
-		show.ID,
-		show.Artist,
-		show.Name,
-	)
-	return []byte(msg)
-}
-
-func getNewShow(id int, name string, artist string) *Show {
-
-	return &Show{
-		ID:     id,
-		Name:   name,
-		Artist: artist,
-		RSS:    "",
-		Genres: []string{},
-		Image: ShowImage{
-			Small:  "",
-			Medium: "",
-			Big:    "",
-		},
-		Description: "",
-	}
-}
-
 func getMockedShows() []*Show {
 
 	return []*Show{
-		getNewShow(1, "Show #1", "Artist Show #1"),
-		getNewShow(2, "Show #2", "Artist Show #2"),
-		getNewShow(3, "Show #3", "Artist Show #3"),
+		NewShow(1, "http://x.com/sh/1", "Sh1"),
+		NewShow(2, "http://x.com/sh/2", "Sh2"),
+		NewShow(3, "http://x.com/sh/3", "Sh3"),
 	}
 }
 
-func TestShowRequestOptions(t *testing.T) {
+func TestGetShowsRequestOptions(t *testing.T) {
 
-	url := "http://x.com"
-	opt := ShowsRequestOptions(genre.NewGenre(1, "test", url))
+	genres := []*genre.Genre{
+		genre.NewGenre(1, "http://x.com./gr/1", "Gr1"),
+		genre.NewGenre(2, "http://x.com./gr/2", "Gr2"),
+		genre.NewGenre(3, "http://x.com./gr/3", "Gr3"),
+	}
+	opt := GetShowsRequestOptions(genres)
 
-	assert.Equal(t, url, opt.RequestOptions.LookupURL)
-	assert.NotEmpty(t, opt.RequestOptions.Pattern)
-	assert.NotEmpty(t, opt.ShowDetailsURL)
+	for _, gr := range genres {
+		assert.Contains(t, opt.LookupURL, gr.URL)
+	}
+	assert.NotEmpty(t, opt.Pattern)
 }
 
 func TestGetShows(t *testing.T) {
@@ -117,15 +84,10 @@ func TestGetShows(t *testing.T) {
 	ts := newTestServer()
 	defer ts.Close()
 
-	options := &ShowRequestOptions{
-		RequestOptions: crawler.RequestOptions{
-			LookupURL: ts.URL,
-			Pattern:   ".target",
-		},
-		ShowDetailsURL: ts.URL + "/show/",
-	}
-
-	shows, _ := GetShows(options)
+	shows, _ := GetShows(&crawler.ScraperOptions{
+		LookupURL: []string{ts.URL},
+		Pattern:   ".target",
+	})
 	mocked := getMockedShows()
 
 	assert.Equal(t, len(mocked), len(shows))
@@ -133,7 +95,15 @@ func TestGetShows(t *testing.T) {
 		assert.Contains(t, shows, mockedShow)
 	}
 
-	options.RequestOptions.LookupURL = ts.URL + "/404"
-	_, errors := GetShows(options)
-	assert.Equal(t, "Not Found", errors[0].Error())
+	_, err := GetShows(&crawler.ScraperOptions{
+		LookupURL: []string{ts.URL + "/invalid"},
+		Pattern:   ".target",
+	})
+	assert.Equal(t, "strconv.Atoi: parsing \"d\": invalid syntax", errors.Cause(err[0]).Error())
+
+	_, err = GetShows(&crawler.ScraperOptions{
+		LookupURL: []string{ts.URL + "/404"},
+		Pattern:   ".target",
+	})
+	assert.Equal(t, "Not Found", err[0].Error())
 }
