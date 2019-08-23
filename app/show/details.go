@@ -4,25 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"errors"
-	"io/ioutil"
+	"time"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
+	"github.com/zhikiri/uaitunes-podcasts/app/static"
 )
 
 type ShowDetails struct {
-	lookupDetails
-}
-
-type lookupDetails struct {
 	ID          int
 	RSS         string
 	Name        string
 	Genres      []string
-	Image       ShowImage
 	Artist      string
-}
-
-type rssDetails struct {
+	Image       ShowImage
 	Description string
 	LastPodcast Podcast
 }
@@ -52,7 +46,7 @@ type lookupResponse struct {
 	} `json:"results"`
 }
 
-func GetDetailsRequestOptions(shows []*Show) *crawler.RequestOptions {
+func GetDetailsRequestOptions(shows []*Show) *crawler.LimitedRequestOptions {
 
 	urls := []string{}
 	for _, show := range shows {
@@ -60,35 +54,52 @@ func GetDetailsRequestOptions(shows []*Show) *crawler.RequestOptions {
 		urls = append(urls, url)
 	}
 
-	return &crawler.RequestOptions{LookupURL: urls}
+	return &crawler.LimitedRequestOptions{
+		LookupURL: urls,
+		Duration: 5 * time.Second,
+	}
 }
 
-func GetDetails(opt *crawler.RequestOptions) ([]*ShowDetails, []error) {
+func GetDetails(opt *crawler.LimitedRequestOptions) ([]*ShowDetails, []error) {
 
-	entities, errs := crawler.RequestEntities(opt, lookupDecoder)
+	entities, errs := crawler.RequestEntitiesWithLimiter(opt, lookupDecoder)
 
 	details := []*ShowDetails{}
 	for _, entity := range entities {
-		locDetails, err := getLookupDetails(entity)
+		showDetails, err := getLookupDetails(entity)
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
 
-		details = append(details, &ShowDetails{lookupDetails: locDetails})
+		details = append(details, showDetails)
 	}
 
 	return details, errs
 }
 
-func SaveDetails(file string, shows []*ShowDetails) error {
+func SaveDetails(path string, details []*ShowDetails) error {
 
-	json, err := json.MarshalIndent(shows, "", "\t")
+	return static.Save(path, func() ([]byte, error) {
+
+		return json.Marshal(details)
+	})
+}
+
+func GetShowDetailsFromFile(path string) ([]*ShowDetails, error) {
+
+	details := []*ShowDetails{}
+
+	err := static.Load(path, func(body []byte) error {
+
+		return json.Unmarshal(body, &details)
+	})
+
 	if err != nil {
-		return err
+		return []*ShowDetails{}, err
 	}
 
-	return ioutil.WriteFile(file, json, 0644)
+	return details, nil
 }
 
 func lookupDecoder(body []byte) (interface{}, error) {
@@ -102,20 +113,20 @@ func lookupDecoder(body []byte) (interface{}, error) {
 	return res, err
 }
 
-func getLookupDetails(entity interface{}) (lookupDetails, error) {
+func getLookupDetails(entity interface{}) (*ShowDetails, error) {
 
 	res, ok := entity.(lookupResponse)
 	if !ok {
-		return lookupDetails{}, errors.New("Invalid entity detected")
+		return &ShowDetails{}, errors.New("Invalid entity detected")
 	}
 
 	if (len(res.Results) == 0) {
-		return lookupDetails{}, errors.New("Show is not found")
+		return &ShowDetails{}, errors.New("Show is not found")
 	}
 
 	apiRes := res.Results[0]
 
-	return lookupDetails{
+	return &ShowDetails{
 		ID:     apiRes.CollectionId,
 		Name:   apiRes.CollectionName,
 		Artist: apiRes.ArtistName,
@@ -125,6 +136,12 @@ func getLookupDetails(entity interface{}) (lookupDetails, error) {
 			Small:  apiRes.ArtworkURL30,
 			Medium: apiRes.ArtworkURL60,
 			Big:    apiRes.ArtworkURL100,
+		},
+		Description: "",
+		LastPodcast: Podcast{
+			Title: "",
+			Description: "",
+			Published: "",
 		},
 	}, nil
 }
