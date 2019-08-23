@@ -4,7 +4,8 @@ import (
 	"net/http"
 	"io/ioutil"
 	"sync"
-	// "fmt"
+	"time"
+	"log"
 )
 
 type RequestResult struct {
@@ -14,6 +15,11 @@ type RequestResult struct {
 
 type RequestOptions struct {
 	LookupURL []string
+}
+
+type LimitedRequestOptions struct {
+	LookupURL []string
+	Duration time.Duration
 }
 
 type RequestDecoder func(body []byte) (interface{}, error)
@@ -42,6 +48,46 @@ func RequestEntities(opt *RequestOptions, decoder RequestDecoder) ([]interface{}
 	err := []error{}
 
 	for result := range resCh {
+
+		if result.Error != nil {
+			err = append(err, result.Error)
+		}
+
+		if result.Entity != nil {
+			res = append(res, result.Entity)
+		}
+	}
+
+	return res, err
+}
+
+func RequestEntitiesWithLimiter(opt *LimitedRequestOptions, decoder RequestDecoder) ([]interface{}, []error) {
+
+	urls := len(opt.LookupURL)
+
+	in := make(chan string, urls)
+	out := make(chan *RequestResult, urls)
+
+	for _, url := range opt.LookupURL {
+		in <- url
+	}
+	close(in)
+
+	limiter := time.Tick(opt.Duration)
+
+	go func(in chan string, out chan *RequestResult) {
+		for i, url := range in {
+			<-limiter
+			log.Printf("Requesting (%d/%d) - %s", i, urls, url)
+			out <- getEntitiesFromRequest(url, decoder)
+		}
+		close(out)
+	}(in, out)
+
+	res := make([]interface{}, 0, urls)
+	err := []error{}
+
+	for result := range out {
 
 		if result.Error != nil {
 			err = append(err, result.Error)
