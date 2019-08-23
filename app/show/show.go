@@ -2,10 +2,10 @@ package show
 
 import (
 	"encoding/json"
-	"io/ioutil"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 	"github.com/zhikiri/uaitunes-podcasts/app/genre"
+	"github.com/zhikiri/uaitunes-podcasts/app/static"
 )
 
 type Show struct {
@@ -32,6 +32,30 @@ func GetShowsRequestOptions(genres []*genre.Genre) *crawler.ScraperOptions {
 	)
 }
 
+func Save(path string, shows []*Show) error {
+
+	return static.Save(path, func() ([]byte, error) {
+
+		return json.Marshal(shows)
+	})
+}
+
+func GetShowsFromFile(path string) ([]*Show, error) {
+
+	shows := []*Show{}
+
+	err := static.Load(path, func(body []byte) error {
+
+		return json.Unmarshal(body, &shows)
+	})
+
+	if err != nil {
+		return []*Show{}, err
+	}
+
+	return shows, nil
+}
+
 func GetShows(opt *crawler.ScraperOptions) ([]*Show, []error) {
 
 	res, err := crawler.ScrapeEntities(opt)
@@ -50,14 +74,4 @@ func GetShows(opt *crawler.ScraperOptions) ([]*Show, []error) {
 	}
 
 	return shows, []error{}
-}
-
-func SaveShows(file string, shows []*Show) error {
-
-	json, err := json.MarshalIndent(shows, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(file, json, 0644)
 }
