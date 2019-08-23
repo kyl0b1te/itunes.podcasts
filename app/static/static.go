@@ -1,9 +1,9 @@
 package static
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
-	"errors"
 )
 
 type DataEncoder func() ([]byte, error)

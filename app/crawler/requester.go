@@ -1,16 +1,16 @@
 package crawler
 
 import (
-	"net/http"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"sync"
 	"time"
-	"log"
 )
 
 type RequestResult struct {
 	Entity interface{}
-	Error error
+	Error  error
 }
 
 type RequestOptions struct {
@@ -19,7 +19,7 @@ type RequestOptions struct {
 
 type LimitedRequestOptions struct {
 	LookupURL []string
-	Duration time.Duration
+	Duration  time.Duration
 }
 
 type RequestDecoder func(body []byte) (interface{}, error)
@@ -76,10 +76,12 @@ func RequestEntitiesWithLimiter(opt *LimitedRequestOptions, decoder RequestDecod
 	limiter := time.Tick(opt.Duration)
 
 	go func(in chan string, out chan *RequestResult) {
-		for i, url := range in {
+		i := 1
+		for url := range in {
 			<-limiter
 			log.Printf("Requesting (%d/%d) - %s", i, urls, url)
 			out <- getEntitiesFromRequest(url, decoder)
+			i++
 		}
 		close(out)
 	}(in, out)

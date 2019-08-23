@@ -2,8 +2,8 @@ package show
 
 import (
 	"encoding/json"
-	"fmt"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
@@ -56,7 +56,7 @@ func GetDetailsRequestOptions(shows []*Show) *crawler.LimitedRequestOptions {
 
 	return &crawler.LimitedRequestOptions{
 		LookupURL: urls,
-		Duration: 5 * time.Second,
+		Duration:  5 * time.Second,
 	}
 }
 
@@ -120,7 +120,7 @@ func getLookupDetails(entity interface{}) (*ShowDetails, error) {
 		return &ShowDetails{}, errors.New("Invalid entity detected")
 	}
 
-	if (len(res.Results) == 0) {
+	if len(res.Results) == 0 {
 		return &ShowDetails{}, errors.New("Show is not found")
 	}
 
@@ -139,9 +139,9 @@ func getLookupDetails(entity interface{}) (*ShowDetails, error) {
 		},
 		Description: "",
 		LastPodcast: Podcast{
-			Title: "",
+			Title:       "",
 			Description: "",
-			Published: "",
+			Published:   "",
 		},
 	}, nil
 }
