@@ -1,10 +1,12 @@
 package genre
 
 import (
+	// "fmt"
+	// "errors"
 	"encoding/json"
-	"io/ioutil"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
+	"github.com/zhikiri/uaitunes-podcasts/app/static"
 )
 
 type Genre struct {
@@ -27,14 +29,28 @@ func GetRequestOptions() *crawler.ScraperOptions {
 	)
 }
 
-func SaveGenres(file string, genres []*Genre) error {
+func Save(path string, genres []*Genre) error {
 
-	json, err := json.Marshal(genres)
+	return static.Save(path, func() ([]byte, error) {
+
+		return json.Marshal(genres)
+	})
+}
+
+func GetGenresFromFile(path string) ([]*Genre, error) {
+
+	genres := []*Genre{}
+
+	err := static.Load(path, func(body []byte) error {
+
+		return json.Unmarshal(body, &genres)
+	})
+
 	if err != nil {
-		return err
+		return []*Genre{}, err
 	}
 
-	return ioutil.WriteFile(file, json, 0644)
+	return genres, nil
 }
 
 func GetGenres(opt *crawler.ScraperOptions) ([]*Genre, []error) {
