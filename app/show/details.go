@@ -27,12 +27,6 @@ type ShowImage struct {
 	Medium string
 }
 
-type Podcast struct {
-	Title       string
-	Published   string
-	Description string
-}
-
 type lookupResponse struct {
 	Results []struct {
 		CollectionId   int      `json:"collectionId"`
@@ -102,7 +96,7 @@ func GetShowDetailsFromFile(path string) ([]*ShowDetails, error) {
 	return details, nil
 }
 
-func lookupDecoder(body []byte) (interface{}, error) {
+func lookupDecoder(url string, body []byte) (interface{}, error) {
 
 	var res lookupResponse
 	err := json.Unmarshal(body, &res)
