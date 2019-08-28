@@ -44,7 +44,6 @@ func RequestEntities(opt *RequestOptions, decoder RequestDecoder) chan *RequestR
 	wg.Wait()
 
 	close(resCh)
-
 	return resCh
 }
 

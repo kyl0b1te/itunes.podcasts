@@ -1,10 +1,11 @@
 package show
 
 import (
-	"encoding/xml"
 	"encoding/json"
-	"strings"
+	"encoding/xml"
 	"errors"
+	"strings"
+
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 	"github.com/zhikiri/uaitunes-podcasts/app/static"
 )
