@@ -9,6 +9,7 @@ import (
 )
 
 type RequestResult struct {
+	URL    string
 	Entity interface{}
 	Error  error
 }
@@ -22,9 +23,9 @@ type LimitedRequestOptions struct {
 	Duration  time.Duration
 }
 
-type RequestDecoder func(body []byte) (interface{}, error)
+type RequestDecoder func(url string, body []byte) (interface{}, error)
 
-func RequestEntities(opt *RequestOptions, decoder RequestDecoder) ([]interface{}, []error) {
+func RequestEntities(opt *RequestOptions, decoder RequestDecoder) chan *RequestResult {
 
 	urlNumber := len(opt.LookupURL)
 
@@ -44,21 +45,7 @@ func RequestEntities(opt *RequestOptions, decoder RequestDecoder) ([]interface{}
 
 	close(resCh)
 
-	res := make([]interface{}, 0, urlNumber)
-	err := []error{}
-
-	for result := range resCh {
-
-		if result.Error != nil {
-			err = append(err, result.Error)
-		}
-
-		if result.Entity != nil {
-			res = append(res, result.Entity)
-		}
-	}
-
-	return res, err
+	return resCh
 }
 
 func RequestEntitiesWithLimiter(opt *LimitedRequestOptions, decoder RequestDecoder) ([]interface{}, []error) {
@@ -107,15 +94,15 @@ func getEntitiesFromRequest(url string, decoder RequestDecoder) *RequestResult {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return &RequestResult{nil, err}
+		return &RequestResult{url, nil, err}
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return &RequestResult{nil, err}
+		return &RequestResult{url, nil, err}
 	}
 
-	res, err := decoder(body)
-	return &RequestResult{res, err}
+	res, err := decoder(url, body)
+	return &RequestResult{url, res, err}
 }
