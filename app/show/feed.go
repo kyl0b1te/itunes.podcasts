@@ -1,6 +1,7 @@
 package show
 
 import (
+	"encoding/xml"
 	"errors"
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 )
@@ -17,7 +18,18 @@ type Podcast struct {
 	Description string
 }
 
-type RSS struct {}
+type RSS struct {
+	XMLName xml.Name `xml:"rss"`
+	Channel struct {
+		XMLName       xml.Name `xml:"channel"`
+		Description   string   `xml:"description"`
+		LastBuildDate string   `xml:"lastBuildDate"`
+		Item          struct {
+			Title       string `xml:"title"`
+			Description string `xml:"description"`
+		} `xml:"item"`
+	} `xml:"channel"`
+}
 
 func GetFeed(shows []*ShowDetails) ([]*Feed, []error) {
 
@@ -25,13 +37,20 @@ func GetFeed(shows []*ShowDetails) ([]*Feed, []error) {
 
 	entities, errs := crawler.RequestEntities(
 		getRequestOptions(shows),
-		rssDecoder(urlToID),
+		rssDecoder,
 	)
 
 	feeds := []*Feed{}
 	for _, entity := range entities {
-		// todo : parse feed here
+		feed, err := getFeedData(entity, urlToID)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			feeds = append(feeds, feed)
+		}
 	}
+
+	return feeds, errs
 }
 
 func getShowsURLToID(shows []*ShowDetails) map[string]int {
@@ -45,7 +64,7 @@ func getShowsURLToID(shows []*ShowDetails) map[string]int {
 	return res
 }
 
-func getRequestOptions(shows []*ShowDetails) *crawler.getRequestOptions {
+func getRequestOptions(shows []*ShowDetails) *crawler.RequestOptions {
 
 	urls := []string{}
 	for _, details := range shows {
@@ -54,25 +73,34 @@ func getRequestOptions(shows []*ShowDetails) *crawler.getRequestOptions {
 		}
 	}
 
-	return &crawler.RequestOptions{urls}
+	return &crawler.RequestOptions{LookupURL: urls}
 }
 
-func rssDecoder(urlToID map[string]int) crawler.RequestDecoder {
+func rssDecoder(url string, body []byte) (interface{}, error) {
+	var rss RSS
+	err := xml.Unmarshal(body, &rss)
 
-	return func(url string, body []byte) (interface{}, error) {
-		var feed RSS
-		err := json.Unmarshal(body, &feed)
-
-		if err != nil {
-			return &Feed{}, err
-		}
-
-		if id, ok := urlToID[url]; !ok {
-			return &Feed{}, errors.New("Cannot resolve feed URL show id")
-		} else {
-			feed.ID = id
-		}
-
-		return feed, nil
+	if err != nil {
+		return &RSS{}, err
 	}
+
+	return rss, nil
+}
+
+func getFeedData(entity interface{}, urlToID map[string]int) (*Feed, error) {
+
+	rss, ok := entity.(RSS)
+	if !ok {
+		return &Feed{}, errors.New("Invalid entity detected")
+	}
+
+	return &Feed{
+		ID:          0,
+		Description: rss.Channel.Description,
+		LastPodcast: Podcast{
+			Title:       rss.Channel.Item.Title,
+			Description: rss.Channel.Item.Description,
+			Published:   rss.Channel.LastBuildDate,
+		},
+	}, nil
 }
