@@ -61,11 +61,11 @@ func GetDetails(opt *crawler.LimitedRequestOptions) ([]*ShowDetails, []error) {
 
 	out := crawler.RequestEntitiesWithLimiter(opt, lookupDecoder)
 	for en := range out {
-		if entity.Error != nil {
-			errs = append(errs, entity.Error)
+		if en.Error != nil {
+			errs = append(errs, en.Error)
 			continue
 		}
-		det, err := getLookupDetails(entity)
+		det, err := getLookupDetails(en)
 		if err != nil {
 			errs = append(errs, err)
 			continue

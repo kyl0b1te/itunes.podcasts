@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -71,6 +72,52 @@ func TestRequestEntities(t *testing.T) {
 
 	opt = &RequestOptions{LookupURL: []string{ts.URL + "/404"}}
 	results = RequestEntities(opt, func(url string, body []byte) (interface{}, error) {
+		return nil, nil
+	})
+
+	for en := range results {
+		assert.NotNil(t, en.Error)
+		assert.Equal(
+			t,
+			fmt.Sprintf("Unreachable URL: %s", en.URL),
+			errors.Cause(en.Error).Error(),
+		)
+	}
+}
+
+func TestRequestEntitiesWithLimiter(t *testing.T) {
+
+	ts := newRequesterTestServer()
+	defer ts.Close()
+
+	tests := getTestData()
+
+	opt := &LimitedRequestOptions{LookupURL: []string{}, Duration: time.Second}
+	for url, _ := range tests {
+		opt.LookupURL = append(opt.LookupURL, ts.URL + url)
+	}
+
+	decoder := func(url string, body []byte) (interface{}, error) {
+		tBody, ok := tests[strings.ReplaceAll(url, ts.URL, "")]
+		assert.True(t, ok)
+		assert.Equal(t, body, tBody)
+
+		return body, nil
+	}
+	results := RequestEntitiesWithLimiter(opt, decoder)
+
+	for entity := range results {
+		tBody, ok := tests[strings.ReplaceAll(entity.URL, ts.URL, "")]
+		assert.True(t, ok)
+		assert.Nil(t, entity.Error)
+		assert.Equal(t, entity.Entity, tBody)
+	}
+
+	opt = &LimitedRequestOptions{
+		LookupURL: []string{ts.URL + "/404"},
+		Duration: time.Second,
+	}
+	results = RequestEntitiesWithLimiter(opt, func(url string, body []byte) (interface{}, error) {
 		return nil, nil
 	})
 
