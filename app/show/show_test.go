@@ -1,8 +1,11 @@
 package show
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
@@ -64,6 +67,14 @@ func getMockedShows() []*Show {
 	}
 }
 
+func TestNewShow(t *testing.T) {
+
+	sh := NewShow(1, "url", "name")
+	assert.Equal(t, 1, sh.ID)
+	assert.Equal(t, "url", sh.URL)
+	assert.Equal(t, "name", sh.Name)
+}
+
 func TestGetShowsRequestOptions(t *testing.T) {
 
 	genres := []*genre.Genre{
@@ -73,8 +84,8 @@ func TestGetShowsRequestOptions(t *testing.T) {
 	}
 	opt := GetShowsRequestOptions(genres)
 
-	for _, gr := range genres {
-		assert.Contains(t, opt.LookupURL, gr.URL)
+	for _, gen := range genres {
+		assert.Contains(t, opt.LookupURL, gen.URL)
 	}
 	assert.NotEmpty(t, opt.Pattern)
 }
@@ -106,4 +117,28 @@ func TestGetShows(t *testing.T) {
 		Pattern:   ".target",
 	})
 	assert.Equal(t, "Not Found", err[0].Error())
+}
+
+func TestGetShowsFromFile(t *testing.T) {
+
+	path := "/tmp/shows.test.json"
+
+	sho, err := GetShowsFromFile("/get/invalid/path")
+	assert.NotNil(t, err)
+	assert.Empty(t, sho)
+
+	func() {
+		sho = []*Show{}
+		for i := 1; i <= 5; i++ {
+			sho = append(sho, NewShow(i, "http://x.com", "X"))
+		}
+		json, _ := json.Marshal(sho)
+		ioutil.WriteFile(path, json, 0644)
+	}()
+
+	sho, err = GetShowsFromFile(path)
+	assert.Nil(t, err)
+	assert.Len(t, sho, 5)
+
+	os.Remove(path)
 }
