@@ -1,8 +1,6 @@
 package genre
 
 import (
-	// "fmt"
-	// "errors"
 	"encoding/json"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"

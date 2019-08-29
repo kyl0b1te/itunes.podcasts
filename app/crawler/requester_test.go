@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/pkg/errors"
@@ -16,7 +16,7 @@ func newRequesterTestServer() *httptest.Server {
 	mux := http.NewServeMux()
 
 	for url, data := range getTestData() {
-		func (url string, data []byte) {
+		func(url string, data []byte) {
 			mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "text/json")
 				w.WriteHeader(200)
@@ -36,7 +36,7 @@ func newRequesterTestServer() *httptest.Server {
 
 func getTestData() map[string][]byte {
 
-	return map[string][]byte {
+	return map[string][]byte{
 		"/test/1": []byte(`{"test": 1}`),
 		"/test/2": []byte(`{"test": 2}`),
 	}
@@ -51,7 +51,7 @@ func TestRequestEntities(t *testing.T) {
 
 	opt := &RequestOptions{LookupURL: []string{}}
 	for url, _ := range tests {
-		opt.LookupURL = append(opt.LookupURL, ts.URL + url)
+		opt.LookupURL = append(opt.LookupURL, ts.URL+url)
 	}
 
 	decoder := func(url string, body []byte) (interface{}, error) {
@@ -94,7 +94,7 @@ func TestRequestEntitiesWithLimiter(t *testing.T) {
 
 	opt := &LimitedRequestOptions{LookupURL: []string{}, Duration: time.Second}
 	for url, _ := range tests {
-		opt.LookupURL = append(opt.LookupURL, ts.URL + url)
+		opt.LookupURL = append(opt.LookupURL, ts.URL+url)
 	}
 
 	decoder := func(url string, body []byte) (interface{}, error) {
@@ -115,7 +115,7 @@ func TestRequestEntitiesWithLimiter(t *testing.T) {
 
 	opt = &LimitedRequestOptions{
 		LookupURL: []string{ts.URL + "/404"},
-		Duration: time.Second,
+		Duration:  time.Second,
 	}
 	results = RequestEntitiesWithLimiter(opt, func(url string, body []byte) (interface{}, error) {
 		return nil, nil

@@ -1,12 +1,12 @@
 package genre
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
-	"io/ioutil"
-	"encoding/json"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 
