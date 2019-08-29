@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	// "fmt"
 
 	"github.com/gocolly/colly"
 	"github.com/pkg/errors"

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type RequestResult struct {
@@ -27,24 +29,24 @@ type RequestDecoder func(url string, body []byte) (interface{}, error)
 
 func RequestEntities(opt *RequestOptions, decoder RequestDecoder) chan *RequestResult {
 
-	urlNumber := len(opt.LookupURL)
+	numb := len(opt.LookupURL)
 
 	var wg sync.WaitGroup
-	resCh := make(chan *RequestResult, urlNumber)
+	results := make(chan *RequestResult, numb)
 
-	wg.Add(urlNumber)
+	wg.Add(numb)
 	for _, url := range opt.LookupURL {
 
 		go func(url string) {
 
-			resCh <- getEntitiesFromRequest(url, decoder)
+			results <- getEntitiesFromRequest(url, decoder)
 			wg.Done()
 		}(url)
 	}
 	wg.Wait()
 
-	close(resCh)
-	return resCh
+	close(results)
+	return results
 }
 
 func RequestEntitiesWithLimiter(opt *LimitedRequestOptions, decoder RequestDecoder) ([]interface{}, []error) {
@@ -94,6 +96,9 @@ func getEntitiesFromRequest(url string, decoder RequestDecoder) *RequestResult {
 	resp, err := http.Get(url)
 	if err != nil {
 		return &RequestResult{url, nil, err}
+	}
+	if resp.StatusCode != 200 {
+		return &RequestResult{url, nil, errors.Errorf("Unreachable URL: %s", url)}
 	}
 	defer resp.Body.Close()
 
