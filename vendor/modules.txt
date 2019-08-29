@@ -8,7 +8,7 @@ github.com/antchfx/htmlquery
 github.com/antchfx/xmlquery
 # github.com/antchfx/xpath v1.0.0
 github.com/antchfx/xpath
-# github.com/davecgh/go-spew v1.1.0
+# github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/gobwas/glob v0.2.3
 github.com/gobwas/glob
@@ -27,6 +27,8 @@ github.com/gocolly/colly/storage
 github.com/golang/protobuf/proto
 # github.com/kennygrant/sanitize v1.2.4
 github.com/kennygrant/sanitize
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
