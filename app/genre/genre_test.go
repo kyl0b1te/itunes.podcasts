@@ -3,8 +3,10 @@ package genre
 import (
 	"net/http"
 	"net/http/httptest"
-	// "os"
+	"os"
 	"testing"
+	"io/ioutil"
+	"encoding/json"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 
@@ -71,7 +73,7 @@ func TestGetRequestOptions(t *testing.T) {
 	assert.NotEmpty(t, options.Pattern)
 }
 
-func TestGetGenresFromWeb(t *testing.T) {
+func TestGetGenres(t *testing.T) {
 
 	ts := newTestServer()
 	defer ts.Close()
@@ -98,4 +100,26 @@ func TestGetGenresFromWeb(t *testing.T) {
 		Pattern:   ".target",
 	})
 	assert.Equal(t, "Not Found", errors.Cause(err[0]).Error())
+}
+
+func TestGetGenresFromFile(t *testing.T) {
+
+	gen, err := GetGenresFromFile("/get/invalid/path")
+	assert.NotNil(t, err)
+	assert.Empty(t, gen)
+
+	func() {
+		gen = []*Genre{}
+		for i := 1; i <= 5; i++ {
+			gen = append(gen, NewGenre(i, "http://x.com", "X"))
+		}
+		json, _ := json.Marshal(gen)
+		ioutil.WriteFile("/tmp/genre.test.json", json, 0644)
+	}()
+
+	gen, err = GetGenresFromFile("/tmp/genre.test.json")
+	assert.Nil(t, err)
+	assert.Len(t, gen, 5)
+
+	os.Remove("/tmp/genre.test.json")
 }
