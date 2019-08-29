@@ -2,12 +2,13 @@ package show
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 	"github.com/zhikiri/uaitunes-podcasts/app/static"
+
+	"github.com/pkg/errors"
 )
 
 type ShowDetails struct {
@@ -65,7 +66,7 @@ func GetDetails(opt *crawler.LimitedRequestOptions) ([]*ShowDetails, []error) {
 			errs = append(errs, en.Error)
 			continue
 		}
-		det, err := getLookupDetails(en)
+		det, err := getLookupDetails(en.Entity)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -116,7 +117,7 @@ func getLookupDetails(entity interface{}) (*ShowDetails, error) {
 
 	res, ok := entity.(lookupResponse)
 	if !ok {
-		return &ShowDetails{}, errors.New("Invalid entity detected")
+		return &ShowDetails{}, errors.Errorf("Invalid entity detected: %+v", entity)
 	}
 
 	if len(res.Results) == 0 {
