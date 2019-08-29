@@ -1,9 +1,10 @@
 package static
 
 import (
-	"errors"
 	"io/ioutil"
 	"os"
+
+	"github.com/pkg/errors"
 )
 
 type DataEncoder func() ([]byte, error)
@@ -13,7 +14,7 @@ func Save(path string, encoder DataEncoder) error {
 
 	data, err := encoder()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Cannot save data")
 	}
 
 	return ioutil.WriteFile(path, data, 0644)
@@ -22,15 +23,12 @@ func Save(path string, encoder DataEncoder) error {
 func Load(path string, decoder DataDecoder) error {
 
 	if exists, err := isExists(path); err != nil || !exists {
-		if err == nil {
-			err = errors.New("File is not exist")
-		}
-		return err
+		return errors.Wrap(err, "File is not exists")
 	}
 
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Cannot read file")
 	}
 
 	return decoder(file)
