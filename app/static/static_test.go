@@ -12,21 +12,23 @@ import (
 
 func TestSave(t *testing.T) {
 
-	err := Save("/tmp/static.test.txt", func() ([]byte, error) {
+	path := "/tmp/static.save.test.txt"
+
+	err := Save(path, func() ([]byte, error) {
 
 		return []byte{}, errors.New("Encoding error")
 	})
 	assert.NotNil(t, err)
 	assert.Equal(t, "Encoding error", errors.Cause(err).Error())
 
-	err = Save("/tmp/static.test.txt", func() ([]byte, error) {
+	err = Save(path, func() ([]byte, error) {
 
 		return []byte("test file"), nil
 	})
 	assert.Nil(t, err)
-	assert.FileExists(t, "/tmp/static.test.txt")
+	assert.FileExists(t, path)
 
-	os.Remove("/tmp/static.test.txt")
+	os.Remove(path)
 }
 
 func TestLoad(t *testing.T) {
