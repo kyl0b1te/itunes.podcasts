@@ -49,7 +49,7 @@ func RequestEntities(opt *RequestOptions, decoder RequestDecoder) chan *RequestR
 	return results
 }
 
-func RequestEntitiesWithLimiter(opt *LimitedRequestOptions, decoder RequestDecoder) ([]interface{}, []error) {
+func RequestEntitiesWithLimiter(opt *LimitedRequestOptions, decoder RequestDecoder) chan *RequestResult {
 
 	urls := len(opt.LookupURL)
 
@@ -64,31 +64,21 @@ func RequestEntitiesWithLimiter(opt *LimitedRequestOptions, decoder RequestDecod
 	limiter := time.Tick(opt.Duration)
 
 	go func(in chan string, out chan *RequestResult) {
+
 		i := 1
 		for url := range in {
+
 			<-limiter
+
 			log.Printf("Requesting (%d/%d) - %s", i, urls, url)
 			out <- getEntitiesFromRequest(url, decoder)
 			i++
 		}
+
 		close(out)
 	}(in, out)
 
-	res := make([]interface{}, 0, urls)
-	err := []error{}
-
-	for result := range out {
-
-		if result.Error != nil {
-			err = append(err, result.Error)
-		}
-
-		if result.Entity != nil {
-			res = append(res, result.Entity)
-		}
-	}
-
-	return res, err
+	return out
 }
 
 func getEntitiesFromRequest(url string, decoder RequestDecoder) *RequestResult {

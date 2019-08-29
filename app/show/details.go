@@ -56,17 +56,22 @@ func GetDetailsRequestOptions(shows []*Show) *crawler.LimitedRequestOptions {
 
 func GetDetails(opt *crawler.LimitedRequestOptions) ([]*ShowDetails, []error) {
 
-	entities, errs := crawler.RequestEntitiesWithLimiter(opt, lookupDecoder)
-
 	details := []*ShowDetails{}
-	for _, entity := range entities {
-		showDetails, err := getLookupDetails(entity)
+	errs := []error{}
+
+	out := crawler.RequestEntitiesWithLimiter(opt, lookupDecoder)
+	for en := range out {
+		if entity.Error != nil {
+			errs = append(errs, entity.Error)
+			continue
+		}
+		det, err := getLookupDetails(entity)
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
 
-		details = append(details, showDetails)
+		details = append(details, det)
 	}
 
 	return details, errs
