@@ -3,11 +3,12 @@ package show
 import (
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"strings"
 
 	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
 	"github.com/zhikiri/uaitunes-podcasts/app/static"
+
+	"github.com/pkg/errors"
 )
 
 type Feed struct {
