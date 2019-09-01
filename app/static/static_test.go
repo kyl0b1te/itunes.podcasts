@@ -34,16 +34,11 @@ func TestSave(t *testing.T) {
 func TestLoad(t *testing.T) {
 
 	path := "/tmp/static.load.test.txt"
+	os.Remove(path)
 
 	err := Load(path, func(body []byte) error { return nil })
 	msg := fmt.Sprintf("stat %s: no such file or directory", path)
 	assert.Equal(t, msg, errors.Cause(err).Error())
-
-	ioutil.WriteFile(path, []byte{}, 0333)
-	err = Load(path, func(body []byte) error { return nil })
-	msg = fmt.Sprintf("open %s: permission denied", path)
-	assert.Equal(t, msg, errors.Cause(err).Error())
-	os.Remove(path)
 
 	ioutil.WriteFile(path, []byte("test load"), 0644)
 	err = Load(path, func(body []byte) error {
@@ -56,5 +51,5 @@ func TestLoad(t *testing.T) {
 		return nil
 	})
 
-	os.Remove(path)
+	defer os.Remove(path)
 }
