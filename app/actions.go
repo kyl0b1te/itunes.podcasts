@@ -37,7 +37,7 @@ func actionDetails(showPath string, chunk int, out string) {
 	stopOnError(err)
 	fmt.Println("Shows total", len(shows))
 
-	file := path.Join(out, "details.json")
+	file := path.Join(out, "shows.details.json")
 	cache, _ := show.GetShowDetailsFromFile(file)
 	fmt.Println("Details found", len(cache))
 
@@ -71,6 +71,6 @@ func actionFeed(detailPath string, out string) {
 	stopOnErrors(errs)
 
 	fmt.Println("Feeds loaded", len(feeds))
-	err = show.SaveFeed(path.Join(out, "feed.json"), feeds)
+	err = show.SaveFeed(path.Join(out, "shows.feed.json"), feeds)
 	stopOnError(err)
 }

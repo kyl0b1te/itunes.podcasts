@@ -10,12 +10,6 @@ import (
 
 func main() {
 
-	// itupod [-g | -genre]
-	// itupod [-s | -show] src/genres.json
-	// itupod [-d | -detail] -chunk 200 src/shows.json
-	// itupod [-f | -feed] src/details.json
-	// itupod [-g | -genre] [-out /tmp]
-
 	genFl := initBoolFlag("g", "genre", "parse genres")
 	shoFl := initBoolFlag("s", "show", "parse shows")
 	detFl := initBoolFlag("d", "detail", "parse details")
