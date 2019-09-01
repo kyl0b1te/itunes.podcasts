@@ -1,4 +1,4 @@
-module github.com/zhikiri/uaitunes-podcasts
+module github.com/zhikiri/itunes.podcasts
 
 go 1.12
 

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	"log"
+	"os"
 
-	"github.com/zhikiri/uaitunes-podcasts/app/genre"
+	"github.com/zhikiri/itunes.podcasts/app/genre"
 )
 
 func main() {

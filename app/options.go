@@ -7,17 +7,17 @@ import (
 )
 
 type Options struct {
-	Type *string
+	Type  *string
 	Chunk *int
-	Out *string
+	Out   *string
 }
 
 func newOptions() (*Options, error) {
 
 	opt := &Options{
-		Type: flag.String("parse", "", "content type to parse (genre|shows|details|feed)"),
+		Type:  flag.String("parse", "", "content type to parse (genre|shows|details|feed)"),
 		Chunk: flag.Int("chunk", 0, "data parsing chunk"),
-		Out: flag.String("out", "/tmp/data.json", "path to the file with results"),
+		Out:   flag.String("out", "/tmp/data.json", "path to the file with results"),
 	}
 	flag.Parse()
 

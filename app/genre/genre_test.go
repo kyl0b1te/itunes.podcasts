@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
+	"github.com/zhikiri/itunes.podcasts/app/crawler"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"

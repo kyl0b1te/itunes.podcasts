@@ -5,8 +5,8 @@ import (
 	"encoding/xml"
 	"strings"
 
-	"github.com/zhikiri/uaitunes-podcasts/app/crawler"
-	"github.com/zhikiri/uaitunes-podcasts/app/static"
+	"github.com/zhikiri/itunes.podcasts/app/crawler"
+	"github.com/zhikiri/itunes.podcasts/app/static"
 
 	"github.com/pkg/errors"
 )

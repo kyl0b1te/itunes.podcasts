@@ -1,4 +1,4 @@
-# uaitunes-podcasts
+# itunes.podcasts
 
 
 ## Useful command
