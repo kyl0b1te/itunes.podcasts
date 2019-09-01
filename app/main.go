@@ -1,33 +1,65 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/zhikiri/itunes.podcasts/app/genre"
+	"github.com/pkg/errors"
 )
 
 func main() {
 
-	opt, err := newOptions()
-	stopOnError(err)
+	// itupod [-g | -genre]
+	// itupod [-s | -show] src/genres.json
+	// itupod [-d | -detail] -chunk 200 src/shows.json
+	// itupod [-f | -feed] src/details.json
+	// itupod [-g | -genre] [-out /tmp]
 
-	log.Println("--- Start ---")
+	genFl := initBoolFlag("g", "genre", "parse genres")
+	shoFl := initBoolFlag("s", "show", "parse shows")
+	detFl := initBoolFlag("d", "detail", "parse details")
+	fedFl := initBoolFlag("f", "feed", "parse feed")
 
-	switch *opt.Type {
-	case "genres":
-		log.Println("Parsing genres...")
-		genres, errs := genre.GetGenres(genre.GetRequestOptions())
-		stopOnErrors(errs)
+	outFl := flag.String("out", "/tmp", "generated files folder")
+	chuFl := flag.Int("chunk", 100, "details parsing chunk")
+	flag.Parse()
 
-		log.Println(len(genres), "was successfully parsed")
-		genre.Save(*opt.Out, genres)
-	default:
-		//
+	if *genFl == true && *shoFl == true && *detFl == true && *fedFl == true {
+		stopOnError(errors.New("Invalid arguments"))
 	}
 
-	log.Println("--- END ---")
+	if *genFl == true {
+
+		actionGenres(*outFl)
+	} else if *shoFl == true {
+
+		actionShows(getFilePathFromArg(), *outFl)
+	} else if *detFl == true {
+
+		actionDetails(getFilePathFromArg(), *chuFl, *outFl)
+	} else if *fedFl == true {
+
+		actionFeed(getFilePathFromArg(), *outFl)
+	}
+
+	fmt.Println("Done")
+	os.Exit(0)
+}
+
+func getFilePathFromArg() string {
+	if len(flag.Args()) == 0 || flag.Arg(0) == "" {
+		stopOnError(errors.New("File path is missing"))
+	}
+	return flag.Arg(0)
+}
+
+func initBoolFlag(short string, full string, desc string) *bool {
+
+	var fl bool
+	flag.BoolVar(&fl, full, false, desc)
+	flag.BoolVar(&fl, short, false, desc+" (shorthand)")
+	return &fl
 }
 
 func stopOnErrors(errs []error) {
