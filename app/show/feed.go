@@ -8,6 +8,7 @@ import (
 	"github.com/zhikiri/itunes.podcasts/app/crawler"
 	"github.com/zhikiri/itunes.podcasts/app/static"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/pkg/errors"
 )
 
@@ -36,6 +37,14 @@ type RSS struct {
 			Description string `xml:"description"`
 		} `xml:"item"`
 	} `xml:"channel"`
+}
+
+func (f *Feed) MarshalJSON() ([]byte, error) {
+	f.Description = getSanitizedString(f.Description)
+	f.LastPodcast.Description = getSanitizedString(f.LastPodcast.Description)
+
+	type feedAlias Feed
+	return json.Marshal(&struct{ *feedAlias }{feedAlias: (*feedAlias)(f)})
 }
 
 func GetFeed(shows []*ShowDetails) ([]*Feed, []error) {
@@ -115,7 +124,6 @@ func getFeedData(entity interface{}, url string, urlToID map[string]int) (*Feed,
 	if id, ok = urlToID[url]; !ok {
 		return &Feed{}, errors.New("Cannot retrieve the show id")
 	}
-
 	lang := strings.Split(strings.ToLower(rss.Channel.Language), "-")[0]
 
 	return &Feed{
@@ -128,4 +136,8 @@ func getFeedData(entity interface{}, url string, urlToID map[string]int) (*Feed,
 			Published:   rss.Channel.LastBuildDate,
 		},
 	}, nil
+}
+
+func getSanitizedString(src string) string {
+	return string(bluemonday.StrictPolicy().SanitizeBytes([]byte(src)))
 }

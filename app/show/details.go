@@ -12,14 +12,12 @@ import (
 )
 
 type ShowDetails struct {
-	ID          int
-	RSS         string
-	Name        string
-	Genres      []string
-	Artist      string
-	Image       ShowImage
-	Description string
-	LastPodcast Podcast
+	ID     int
+	RSS    string
+	Name   string
+	Genres []string
+	Artist string
+	Image  ShowImage
 }
 
 type ShowImage struct {
@@ -136,12 +134,6 @@ func getLookupDetails(entity interface{}) (*ShowDetails, error) {
 			Small:  apiRes.ArtworkURL30,
 			Medium: apiRes.ArtworkURL60,
 			Big:    apiRes.ArtworkURL100,
-		},
-		Description: "",
-		LastPodcast: Podcast{
-			Title:       "",
-			Description: "",
-			Published:   "",
 		},
 	}, nil
 }
