@@ -67,10 +67,13 @@ func actionFeed(detailPath string, out string) {
 	details, err := show.GetShowDetailsFromFile(detailPath)
 	stopOnError(err)
 
+	fmt.Println("Details found", len(details))
 	feeds, errs := show.GetFeed(details)
-	stopOnErrors(errs)
 
 	fmt.Println("Feeds loaded", len(feeds))
 	err = show.SaveFeed(path.Join(out, "shows.feed.json"), feeds)
-	stopOnError(err)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	stopOnErrors(errs)
 }
