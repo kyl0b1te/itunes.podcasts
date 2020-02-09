@@ -32,7 +32,7 @@ func actionShows(genrePath string, out string) {
 	stopOnError(err)
 }
 
-func actionDetails(showPath string, chunk int, out string) {
+func actionDetails(showPath string, delay int, chunk int, out string) {
 	fmt.Println("Starting details loading")
 	shows, err := show.GetShowsFromFile(showPath)
 	stopOnError(err)
@@ -54,7 +54,10 @@ func actionDetails(showPath string, chunk int, out string) {
 		}
 	}
 
-	details, errs := show.GetDetails(show.GetDetailsRequestOptions(fresh, 5*time.Second))
+	details, errs := show.GetDetails(show.GetDetailsRequestOptions(
+		fresh,
+		(time.Duration)(delay)*time.Second),
+	)
 	stopOnErrors(errs)
 
 	fmt.Println("Details loaded", len(details))

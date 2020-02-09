@@ -17,6 +17,7 @@ func main() {
 
 	outFl := flag.String("out", "/tmp", "generated files folder")
 	chuFl := flag.Int("chunk", 100, "details parsing chunk")
+	delFl := flag.Int("delay", 5, "delay between chunked requests")
 	flag.Parse()
 
 	if *genFl == true && *shoFl == true && *detFl == true && *fedFl == true {
@@ -31,7 +32,7 @@ func main() {
 		actionShows(getFilePathFromArg(), *outFl)
 	} else if *detFl == true {
 
-		actionDetails(getFilePathFromArg(), *chuFl, *outFl)
+		actionDetails(getFilePathFromArg(), *delFl, *chuFl, *outFl)
 	} else if *fedFl == true {
 
 		actionFeed(getFilePathFromArg(), *outFl)
