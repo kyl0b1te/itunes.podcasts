@@ -2,3 +2,6 @@
 bin
 dist
 vendor
+
+# Log
+itupod.Log

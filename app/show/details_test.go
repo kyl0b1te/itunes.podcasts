@@ -125,7 +125,7 @@ func TestGetDetailsRequestOptions(t *testing.T) {
 		NewShow(2, "http://x.com", "2"),
 		NewShow(3, "http://x.com", "3"),
 	}
-	opt := GetDetailsRequestOptions(shows)
+	opt := GetDetailsRequestOptions(shows, 5*time.Second)
 
 	for _, sho := range shows {
 		url := fmt.Sprintf("%s=%d", "https://itunes.apple.com/lookup?id", sho.ID)

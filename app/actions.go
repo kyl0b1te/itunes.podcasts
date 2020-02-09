@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"path"
+	"time"
 
 	"github.com/zhikiri/itunes.podcasts/app/genre"
 	"github.com/zhikiri/itunes.podcasts/app/show"
@@ -53,7 +54,7 @@ func actionDetails(showPath string, chunk int, out string) {
 		}
 	}
 
-	details, errs := show.GetDetails(show.GetDetailsRequestOptions(fresh))
+	details, errs := show.GetDetails(show.GetDetailsRequestOptions(fresh, 5*time.Second))
 	stopOnErrors(errs)
 
 	fmt.Println("Details loaded", len(details))

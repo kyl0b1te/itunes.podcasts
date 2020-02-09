@@ -39,7 +39,7 @@ type lookupResponse struct {
 	} `json:"results"`
 }
 
-func GetDetailsRequestOptions(shows []*Show) *crawler.LimitedRequestOptions {
+func GetDetailsRequestOptions(shows []*Show, delay time.Duration) *crawler.LimitedRequestOptions {
 
 	urls := []string{}
 	for _, show := range shows {
@@ -49,7 +49,7 @@ func GetDetailsRequestOptions(shows []*Show) *crawler.LimitedRequestOptions {
 
 	return &crawler.LimitedRequestOptions{
 		LookupURL: urls,
-		Duration:  5 * time.Second,
+		Duration:  delay,
 	}
 }
 
