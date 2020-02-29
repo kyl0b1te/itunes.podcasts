@@ -14,6 +14,7 @@ func main() {
 	shoFl := initBoolFlag("s", "show", "parse shows")
 	detFl := initBoolFlag("d", "detail", "parse details")
 	fedFl := initBoolFlag("f", "feed", "parse feed")
+	comFl := initBoolFlag("c", "compact", "generate compact list of shows")
 
 	outFl := flag.String("out", "/tmp", "generated files folder")
 	chuFl := flag.Int("chunk", 100, "details parsing chunk")
@@ -36,6 +37,9 @@ func main() {
 	} else if *fedFl == true {
 
 		actionFeed(getFilePathFromArg(), *outFl)
+	} else if *comFl == true {
+
+		actionCompact(getFilePathFromArg(), *outFl)
 	}
 
 	fmt.Println("Done")
