@@ -81,3 +81,37 @@ func actionFeed(detailPath string, out string) {
 	}
 	stopOnErrors(errs)
 }
+
+func actionCompact(src string, out string) {
+	file := path.Join(src, "genres.json")
+	genres, err := genre.GetGenresFromFile(file)
+	stopOnError(err)
+
+	file = path.Join(src, "shows.details.json")
+	details, err := show.GetShowDetailsFromFile(file)
+	stopOnError(err)
+
+	file = path.Join(src, "shows.feed.json")
+	feeds, err := show.GetShowFeedsFromFile(file)
+	stopOnError(err)
+
+	file = path.Join(src, "shows.json")
+	shows, err := show.GetShowsFromFile(file)
+	stopOnError(err)
+
+	genPair := getGenresMap(genres)
+	feePair := getFeedsMap(feeds)
+	detPair := getDetailsMap(details)
+
+	res := make([]*CompactShow, 0, len(shows))
+	for _, show := range shows {
+		com := NewCompactShow(show)
+		if !com.SetFromDetails(detPair, genPair) {
+			continue
+		}
+		com.SetFromFeed(feePair)
+		res = append(res, com)
+	}
+
+	SaveCompactShows(path.Join(out, "shows.compact.json"), res)
+}

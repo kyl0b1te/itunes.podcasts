@@ -79,6 +79,22 @@ func SaveFeed(path string, feed []*Feed) error {
 	})
 }
 
+func GetShowFeedsFromFile(path string) ([]*Feed, error) {
+
+	feeds := []*Feed{}
+
+	err := static.Load(path, func(body []byte) error {
+
+		return json.Unmarshal(body, &feeds)
+	})
+
+	if err != nil {
+		return []*Feed{}, err
+	}
+
+	return feeds, nil
+}
+
 func getShowsURLToID(shows []*ShowDetails) map[string]int {
 
 	res := map[string]int{}
